@@ -59,6 +59,7 @@ class AURBackend:
                 continue
             autoremove.append(pkgname)
         for pkgname in autoremove:
+            print('Removing \'{}\'...'.format(pkgname))
             aurrepo.remove(pkgname)
 
 
