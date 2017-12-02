@@ -12,7 +12,7 @@ class AURBackend:
     def add(cls, target):
         with utils.JSONStore(utils.Config.db('aur')) as store:
             targets = store.read([])
-            if target not in target:
+            if target not in targets:
                 targets.append(target)
                 store.write(targets)
 

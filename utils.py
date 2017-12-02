@@ -73,7 +73,7 @@ class JSONStore:
         self.lockfile = '{}.lock'.format(path)
 
     def __enter__(self):
-        self.file = open(self.path, mode='w+t')
+        self.file = open(self.path, mode='a+t')
         fcntl.flock(self.file, fcntl.LOCK_EX)
         if os.path.isfile(self.lockfile):
             raise LockfileExistsError(self.path)
