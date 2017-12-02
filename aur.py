@@ -10,24 +10,31 @@ import shutil
 class AURBackend:
     @classmethod
     def add(cls, target):
-        with TargetDB() as targetdb:
-            targetdb.add(target)
+        with utils.JSONStore(utils.Config.db('aur')) as store:
+            targets = store.read([])
+            if target not in target:
+                targets.append(target)
+                store.write(targets)
 
     @classmethod
     def remove(cls, target):
-        with TargetDB() as targetdb:
-            targetdb.remove(target)
+        with utils.JSONStore(utils.Config.db('aur')) as store:
+            targets = store.read([])
+            try:
+                targets.remove(target)
+                store.write(targets)
+            except ValueError:
+                pass
 
     @classmethod
     def list(cls):
-        with TargetDB() as targetdb:
-            return targetdb.targets
+        with utils.JSONStore(utils.Config.db('aur')) as store:
+            return store.read([])
 
     @classmethod
     def generate_plan(cls):
         with repo.Repo.for_backend('aur') as aurrepo:
-            with TargetDB() as targetdb:
-                return BuildPlan.for_packages(aurrepo, targetdb.targets)
+            return BuildPlan.for_packages(aurrepo, cls.list())
 
     @classmethod
     def execute_plan(cls, plan, chroot, chrootrepo):
@@ -55,29 +62,6 @@ class AURBackend:
                 autoremove.append(pkgname)
             for pkgname in autoremove:
                 aurrepo.remove(pkgname)
-
-
-class TargetDB:
-    def __enter__(self):
-        self.store = utils.JSONStore(utils.Config.db('aur'))
-        self.store.__enter__()
-        self.targets = self.store.read([])
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.store.__exit__(exc_type, exc_value, traceback)
-
-    def add(self, pkgname):
-        if pkgname not in self.targets:
-            self.targets.append(pkgname)
-            self.store.write(self.targets)
-
-    def remove(self, pkgname):
-        try:
-            self.targets.remove(pkgname)
-            self.store.write(self.targets)
-        except ValueError:
-            pass
 
 
 class BuildItem:
