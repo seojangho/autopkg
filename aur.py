@@ -51,6 +51,7 @@ class AURBackend:
             trials = utils.Config.trials()
             while True:
                 try:
+                    utils.sync()
                     chroot.build(pkgbuilddir)
                     for target in builditem.pkgnames:
                         built = repo.get_pkgfile_path(pkgbuilddir, target, None)

@@ -5,6 +5,10 @@ import fcntl
 import os
 import json
 
+def sync():
+    subprocess.run(['sync'])
+
+
 class Config:
     default_config = {
             'workspace': os.getenv('HOME') + '/.autopkg',

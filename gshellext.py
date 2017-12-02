@@ -22,10 +22,6 @@ depends=('gnome-shell')
 source=('{}')
 sha256sums=('SKIP')
 
-build() {{
-  true
-}}
-
 package() {{
   extension_uuid='{}'
   symlink_name='{}'
