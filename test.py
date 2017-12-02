@@ -18,13 +18,4 @@ with Repo.for_backend('aur') as aurrepo:
                 for builditem in plan.build:
                     build_and_install(builditem, chroot, [aurrepo, chrootrepo])
 
-    autoremove = []
-    for pkgname in aurrepo.packages.keys():
-        if pkgname in plan.built:
-            continue
-        if pkgname in plan.keep:
-            continue
-        autoremove.append(pkgname)
-    for pkgname in autoremove:
-        aurrepo.remove(pkgname)
 

@@ -7,6 +7,56 @@ import subprocess
 import repo
 import shutil
 
+class AURBackend:
+    @classmethod
+    def add(cls, target):
+        with TargetDB() as targetdb:
+            targetdb.add(target)
+
+    @classmethod
+    def remove(cls, target):
+        with TargetDB() as targetdb:
+            targetdb.remove(target)
+
+    @classmethod
+    def list(cls):
+        with TargetDB() as targetdb:
+            return targetdb.targets
+
+    @classmethod
+    def generate_plan(cls):
+        with repo.Repo.for_backend('aur') as aurrepo:
+            with TargetDB() as targetdb:
+                return BuildPlan.for_packages(aurrepo, targetdb.targets)
+
+    @classmethod
+    def execute_plan(cls, plan, chroot, chrootrepo):
+        with repo.Repo.for_backend('aur') as aurrepo:
+            for pkgname in plan.keep:
+                pkg = aurrepo.pkgfile_path(pkgname)
+                chrootrepo.add(pkg)
+            for builditem in plan.build:
+                pkgbase = builditem.pkgbase
+                pkgbuilddir = '{}/{}'.format(utils.Config.workspace('aur'), pkgbase)
+                giturl = 'https://aur.archlinux.org/{}.git'.format(pkgbase)
+                subprocess.run(['git', 'clone', giturl, pkgbuilddir])
+                chroot.build(pkgbuilddir)
+                for target in builditem.pkgnames:
+                    built = repo.get_pkgfile_path(pkgbuilddir, target, None)
+                    aurrepo.add(built)
+                    chrootrepo.add(built)
+                shutil.rmtree(pkgbuilddir)
+            autoremove = []
+            for pkgname in aurrepo.packages.keys():
+                if pkgname in plan.built:
+                    continue
+                if pkgname in plan.keep:
+                    continue
+                autoremove.append(pkgname)
+            for pkgname in autoremove:
+                aurrepo.remove(pkgname)
+
+
 class TargetDB:
     def __enter__(self):
         self.store = utils.JSONStore(utils.Config.db('aur'))
@@ -28,19 +78,6 @@ class TargetDB:
             self.store.write(self.targets)
         except ValueError:
             pass
-
-
-def build_and_install(builditem, chroot, installrepos):
-    pkgbase = builditem.pkgbase
-    pkgbuilddir = '{}/{}'.format(utils.Config.workspace('aur'), pkgbase)
-    giturl = 'https://aur.archlinux.org/{}.git'.format(pkgbase)
-    subprocess.run(['git', 'clone', giturl, pkgbuilddir])
-    chroot.build(pkgbuilddir)
-    for target in builditem.pkgnames:
-        built = repo.get_pkgfile_path(pkgbuilddir, target, None)
-        for installrepo in installrepos:
-            installrepo.add(built)
-    shutil.rmtree(pkgbuilddir)
 
 
 class BuildItem:
@@ -76,6 +113,9 @@ class BuildPlan:
 
     def __str__(self):
         return 'BuildPlan build: {}, keep: {}'.format(self.build, self.keep)
+
+    def empty(self):
+        return len(self.build) == 0
 
     @classmethod
     def for_package(cls, localrepo, pkgname):
