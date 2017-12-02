@@ -7,7 +7,7 @@ from chroot import Chroot
 
 with Repo.for_backend('aur') as aurrepo:
     #plan = BuildPlan.for_packages(aurrepo, ['intellij-idea-ultimate-edition-jre','intellij-idea-ultimate-edition', 'keybase-bin'])
-    plan = BuildPlan.for_packages(aurrepo, ['package-query'])
+    plan = BuildPlan.for_packages(aurrepo, ['yaourt'])
     print(plan)
     if len(plan.build) != 0:
         with Chroot() as chroot:

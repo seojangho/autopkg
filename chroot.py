@@ -18,5 +18,5 @@ class Chroot:
         subprocess.run(['sudo', 'rm', '-rf', utils.Config.chroot()])
 
     def build(self, makepkgdir):
-        subprocess.run(['makechrootpkg', '-c', '-u', '-l', 'working', '-r',
+        subprocess.run(['makechrootpkg', '-c', '-l', 'working', '-r',
             utils.Config.chroot()], cwd=makepkgdir)

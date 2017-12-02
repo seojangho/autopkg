@@ -39,7 +39,7 @@ def build_and_install(builditem, aurrepo, chroot):
     for target in builditem.pkgnames:
         built = repo.get_pkgfile_path(pkgbuilddir, target, None)
         aurrepo.add(built)
-    shtuils.rmtree(pkgbuilddir)
+    shutils.rmtree(pkgbuilddir)
 
 
 class BuildItem:
@@ -166,7 +166,20 @@ class AURInfo:
                 raise AURPackageNotFoundError(pkgname)
             result = decoded['results'][0]
             return cls(result['Name'], result['PackageBase'], result['Version'],
-                    result.get('Depends', []), result.get('MakeDepends', []))
+                    cls.pkgnames(result.get('Depends', [])),
+                    cls.pkgnames(result.get('MakeDepends', [])))
+
+    @classmethod
+    def pkgname(cls, string):
+        x = string
+        x = x.split('>')[0]
+        x = x.split('<')[0]
+        x = x.split('=')[0]
+        return x
+
+    @classmethod
+    def pkgnames(cls, strings):
+        return [cls.pkgname(string) for string in strings]
 
     def __str__(self):
         return 'Package \'{}\' {} (base: \'{}\')'.format(self.name, self.version,
