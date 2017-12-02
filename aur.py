@@ -37,6 +37,8 @@ class AURBackend:
 
     @classmethod
     def execute_plan(cls, plan, aurrepo, chroot, chrootrepo):
+        if plan.empty():
+            return
         for pkgname in plan.keep:
             pkg = aurrepo.pkgfile_path(pkgname)
             chrootrepo.add(pkg)
