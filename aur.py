@@ -39,7 +39,7 @@ def build_and_install(builditem, aurrepo, chroot):
     for target in builditem.pkgnames:
         built = repo.get_pkgfile_path(pkgbuilddir, target, None)
         aurrepo.add(built)
-    shutils.rmtree(pkgbuilddir)
+    shutil.rmtree(pkgbuilddir)
 
 
 class BuildItem:
