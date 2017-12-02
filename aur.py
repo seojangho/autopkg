@@ -62,6 +62,9 @@ class AURBackend:
                     if trials == 0:
                         raise BuildError()
             shutil.rmtree(pkgbuilddir)
+
+    @classmethod
+    def autoremove(cls, plan, aurrepo):
         autoremove = []
         for pkgname in aurrepo.packages.keys():
             if pkgname in plan.built:

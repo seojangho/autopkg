@@ -13,6 +13,7 @@ if len(sys.argv) <= 1:
             with Chroot() as chroot:
                 with Repo.for_chroot() as chrootrepo:
                     AURBackend.execute_plan(plan, aurrepo, chroot, chrootrepo)
+        AURBackend.autoremove(plan, aurrepo)
 elif sys.argv[1] == 'add':
     AURBackend.add(sys.argv[2])
 elif sys.argv[1] == 'remove':
