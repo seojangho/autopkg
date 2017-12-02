@@ -30,7 +30,7 @@ class TargetDB:
             pass
 
 
-def build_and_install(builditem, aurrepo, chroot):
+def build_and_install(builditem, chroot, installrepos):
     pkgbase = builditem.pkgbase
     pkgbuilddir = '{}/{}'.format(utils.Config.workspace('aur'), pkgbase)
     giturl = 'https://aur.archlinux.org/{}.git'.format(pkgbase)
@@ -38,7 +38,8 @@ def build_and_install(builditem, aurrepo, chroot):
     chroot.build(pkgbuilddir)
     for target in builditem.pkgnames:
         built = repo.get_pkgfile_path(pkgbuilddir, target, None)
-        aurrepo.add(built)
+        for installrepo in installrepos:
+            installrepo.add(built)
     shutil.rmtree(pkgbuilddir)
 
 

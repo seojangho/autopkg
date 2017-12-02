@@ -12,5 +12,8 @@ with Repo.for_backend('aur') as aurrepo:
     if len(plan.build) != 0:
         with Chroot() as chroot:
             with Repo.for_chroot() as chrootrepo:
+                for pkgname in plan.keep:
+                    pkg = aurrepo.pkgfile_path(pkgname)
+                    chrootrepo.add(pkg)
                 for builditem in plan.build:
-                    build_and_install(builditem, aurrepo, chroot)
+                    build_and_install(builditem, chroot, [aurrepo, chrootrepo])
