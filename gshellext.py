@@ -33,7 +33,6 @@ package() {{
   install -d "${{pkgdir}}/usr/share/gnome-shell/extensions/${{extension_uuid}}"
   [[ -d schemas ]] && find schemas -name '*.xml' -exec install -Dm644 -t "$pkgdir/usr/share/glib-2.0/schemas/" '{{}}' +
   [[ -d locale ]] && cp -af locale "${{pkgdir}}/usr/share/locale/"
-  rm -rf schemas locale
   cp -af * "${{pkgdir}}/usr/share/gnome-shell/extensions/${{extension_uuid}}"
   find "$pkgdir" -type d -exec chmod 755 {{}} \;
   find "$pkgdir" -type f -exec chmod 644 {{}} \;
