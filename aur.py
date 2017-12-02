@@ -32,36 +32,34 @@ class AURBackend:
             return store.read([])
 
     @classmethod
-    def generate_plan(cls):
-        with repo.Repo.for_backend('aur') as aurrepo:
-            return BuildPlan.for_packages(aurrepo, cls.list())
+    def generate_plan(cls, aurrepo):
+        return BuildPlan.for_packages(aurrepo, cls.list())
 
     @classmethod
-    def execute_plan(cls, plan, chroot, chrootrepo):
-        with repo.Repo.for_backend('aur') as aurrepo:
-            for pkgname in plan.keep:
-                pkg = aurrepo.pkgfile_path(pkgname)
-                chrootrepo.add(pkg)
-            for builditem in plan.build:
-                pkgbase = builditem.pkgbase
-                pkgbuilddir = '{}/{}'.format(utils.Config.workspace('aur'), pkgbase)
-                giturl = 'https://aur.archlinux.org/{}.git'.format(pkgbase)
-                subprocess.run(['git', 'clone', giturl, pkgbuilddir])
-                chroot.build(pkgbuilddir)
-                for target in builditem.pkgnames:
-                    built = repo.get_pkgfile_path(pkgbuilddir, target, None)
-                    aurrepo.add(built)
-                    chrootrepo.add(built)
-                shutil.rmtree(pkgbuilddir)
-            autoremove = []
-            for pkgname in aurrepo.packages.keys():
-                if pkgname in plan.built:
-                    continue
-                if pkgname in plan.keep:
-                    continue
-                autoremove.append(pkgname)
-            for pkgname in autoremove:
-                aurrepo.remove(pkgname)
+    def execute_plan(cls, plan, aurrepo, chroot, chrootrepo):
+        for pkgname in plan.keep:
+            pkg = aurrepo.pkgfile_path(pkgname)
+            chrootrepo.add(pkg)
+        for builditem in plan.build:
+            pkgbase = builditem.pkgbase
+            pkgbuilddir = '{}/{}'.format(utils.Config.workspace('aur'), pkgbase)
+            giturl = 'https://aur.archlinux.org/{}.git'.format(pkgbase)
+            subprocess.run(['git', 'clone', giturl, pkgbuilddir])
+            chroot.build(pkgbuilddir)
+            for target in builditem.pkgnames:
+                built = repo.get_pkgfile_path(pkgbuilddir, target, None)
+                aurrepo.add(built)
+                chrootrepo.add(built)
+            shutil.rmtree(pkgbuilddir)
+        autoremove = []
+        for pkgname in aurrepo.packages.keys():
+            if pkgname in plan.built:
+                continue
+            if pkgname in plan.keep:
+                continue
+            autoremove.append(pkgname)
+        for pkgname in autoremove:
+            aurrepo.remove(pkgname)
 
 
 class BuildItem:
