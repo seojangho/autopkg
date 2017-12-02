@@ -45,11 +45,22 @@ class AURBackend:
             pkgbuilddir = '{}/{}'.format(utils.Config.workspace('aur'), pkgbase)
             giturl = 'https://aur.archlinux.org/{}.git'.format(pkgbase)
             subprocess.run(['git', 'clone', giturl, pkgbuilddir])
-            chroot.build(pkgbuilddir)
-            for target in builditem.pkgnames:
-                built = repo.get_pkgfile_path(pkgbuilddir, target, None)
-                aurrepo.add(built)
-                chrootrepo.add(built)
+
+            trials = utils.Config.trials()
+            while True:
+                try:
+                    chroot.build(pkgbuilddir)
+                    for target in builditem.pkgnames:
+                        built = repo.get_pkgfile_path(pkgbuilddir, target, None)
+                        if built is None:
+                            raise BuildError()
+                        aurrepo.add(built)
+                        chrootrepo.add(built)
+                    break
+                except BuildError:
+                    trials -= 1
+                    if trials == 0:
+                        raise BuildError()
             shutil.rmtree(pkgbuilddir)
         autoremove = []
         for pkgname in aurrepo.packages.keys():
@@ -61,6 +72,10 @@ class AURBackend:
         for pkgname in autoremove:
             print('Removing \'{}\'...'.format(pkgname))
             aurrepo.remove(pkgname)
+
+
+class BuildError(Exception):
+    pass
 
 
 class BuildItem:

@@ -8,7 +8,8 @@ import json
 class Config:
     default_config = {
             'workspace': os.getenv('HOME') + '/.autopkg',
-            'gpgkey': 'EE37EBD527ECFE87A96A7BDB6503B6817E24FCA3'
+            'gpgkey': 'EE37EBD527ECFE87A96A7BDB6503B6817E24FCA3',
+            'trials': 10
             }
 
     @classmethod
@@ -19,6 +20,10 @@ class Config:
             with JSONStore(os.getenv('HOME') + '/.autopkg.json') as f:
                 cls.config = f.read(cls.default_config, write_default=True)
             return cls.config
+
+    @classmethod
+    def trials(cls):
+        return cls.get()['trials']
 
     @classmethod
     def gpgkey(cls):
