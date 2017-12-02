@@ -36,7 +36,7 @@ class Repo:
 
     @classmethod
     def for_backend(cls, backend):
-        return cls(utils.Config.repo(backend), backend)
+        return cls(utils.Config.repo(backend), utils.Config.repo_prefix() + backend)
 
     @classmethod
     def for_chroot(cls):
