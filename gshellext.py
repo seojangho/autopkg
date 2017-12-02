@@ -35,6 +35,8 @@ package() {{
   [[ -d locale ]] && cp -af locale "${{pkgdir}}/usr/share/locale/"
   rm -rf schemas locale
   cp -af * "${{pkgdir}}/usr/share/gnome-shell/extensions/${{extension_uuid}}"
+  find "$pkgdir" -type d -exec chmod 755 {{}} \;
+  find "$pkgdir" -type f -exec chmod 644 {{}} \;
 }}
 """
 
