@@ -7,6 +7,7 @@ import utils
 import os
 import repo
 import shutil
+import subprocess
 
 PACKAGE_NAME_FORMAT = 'gnome-shell-extension-{}'
 PKGBUILD_FORMAT = """
@@ -66,7 +67,7 @@ class GnomeShellExtensionBackend:
         return BuildPlan.for_extensions(gshellextrepo, cls.list())
 
     @classmethod
-    def execute_plan(cls, plan, gshellextrepo, chroot, chrootrepo):
+    def execute_plan(cls, plan, gshellextrepo):
         for info in plan.build:
             pkgbuilddir = '{}/{}'.format(utils.Config.workspace('gshellext'), info.uuid)
             os.mkdir(pkgbuilddir)
@@ -74,7 +75,7 @@ class GnomeShellExtensionBackend:
                     info.link, info.download_url, info.uuid, info.download_url.split('/')[-1])
             with open(pkgbuilddir + '/PKGBUILD', 'w') as f:
                 f.write(pkgbuild)
-            chroot.build(pkgbuilddir)
+            subprocess.run(['makepkg', '--nodeps', utils.Config.chroot()], cwd=pkgbuilddir)
             built = repo.get_pkgfile_path(pkgbuilddir, info.pkgname, '{}-1'.format(info.version))
             if built is None:
                 raise Exception('Build error')

@@ -13,12 +13,12 @@ if len(sys.argv) <= 1:
             print(aurplan)
             gshellextplan = GnomeShellExtensionBackend.generate_plan(gshellextrepo)
             print(gshellextplan)
-            if not aurplan.empty() or not gshellextplan.empty():
+            if not aurplan.empty():
                 with Chroot() as chroot:
                     with Repo.for_chroot() as chrootrepo:
                         AURBackend.execute_plan(aurplan, aurrepo, chroot, chrootrepo)
-                        GnomeShellExtensionBackend.execute_plan(gshellextplan, gshellextrepo,
-                                chroot, chrootrepo)
+            if not gshellextplan.empty():
+                GnomeShellExtensionBackend.execute_plan(gshellextplan, gshellextrepo)
             AURBackend.autoremove(aurplan, aurrepo)
             GnomeShellExtensionBackend.autoremove(gshellextplan, gshellextrepo)
 else:
