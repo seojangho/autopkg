@@ -60,6 +60,7 @@ class Repo:
     def add(self, pkgfilepath):
         pkgname, pkgver = pkgname_pkgver(pkgfilepath)
         subprocess.run(self.sudocmd + ['cp', pkgfilepath, self.dir])
+        subprocess.run(self.sudocmd + ['cp', pkgfilepath + '.sig', self.dir])
         subprocess.run(self.sudocmd + ['repo-add', '-R'] + self.signcmd + [self.db, pkgfilepath])
         self.packages[pkgname] = pkgver
 

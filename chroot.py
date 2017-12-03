@@ -19,4 +19,5 @@ class Chroot:
 
     def build(self, makepkgdir):
         subprocess.run(['makechrootpkg', '-c', '-u', '-l', 'working', '-r',
-            utils.Config.chroot()], cwd=makepkgdir)
+            utils.Config.chroot(), '--', '--sign', '--syncdeps', '--noconfirm', '--log',
+            '--holdver', '--skipinteg', '--key', utils.Config.gpgkey()], cwd=makepkgdir)
