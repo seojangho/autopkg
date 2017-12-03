@@ -61,7 +61,8 @@ class Repo:
         pkgname, pkgver = pkgname_pkgver(pkgfilepath)
         subprocess.run(self.sudocmd + ['cp', pkgfilepath, self.dir])
         if self.sign:
-            subprocess.run(self.sudocmd + ['gpg', '--detach-sign', '--no-armor', pkgfilepath])
+            subprocess.run(self.sudocmd + ['gpg', '--detach-sign', '--no-armor', '--default-key',
+                utils.Config.gpgkey(), pkgfilepath])
             subprocess.run(self.sudocmd + ['cp', pkgfilepath + '.sig', self.dir])
         subprocess.run(self.sudocmd + ['repo-add', '-R'] + self.signcmd + [self.db, pkgfilepath])
         self.packages[pkgname] = pkgver

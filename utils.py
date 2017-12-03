@@ -12,7 +12,7 @@ def sync():
 class Config:
     default_config = {
             'workspace': os.getenv('HOME') + '/.autopkg',
-            'gpgkey': 'EE37EBD527ECFE87A96A7BDB6503B6817E24FCA3',
+            'gpgkey': '3F340EF619CEA6C49E911EA5345F88AC757778D7',
             'trials': 10,
             'repo_prefix': 'jangho_'
             }
