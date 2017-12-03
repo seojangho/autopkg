@@ -16,6 +16,15 @@ class Chroot:
 
     def __exit__(self, exc_type, exc_value, traceback):
         subprocess.run(['sudo', 'rm', '-rf', utils.Config.chroot()])
+        if utils.is_chroot_btrfs():
+            subprocess.run(['sudo', 'btrfs', 'subvolume', 'delete',
+                utils.Config.chroot() + '/working'])
+            subprocess.run(['sudo', 'btrfs', 'subvolume', 'delete',
+                utils.Config.chroot() + '/root/var/lib/machines'])
+            subprocess.run(['sudo', 'rm', '-rf', utils.Config.chroot() + '/root/var'])
+            subprocess.run(['sudo', 'btrfs', 'subvolume', 'delete',
+                utils.Config.chroot() + '/root'])
+            subprocess.run(['sudo', 'rm', '-rf', utils.Config.chroot()])
 
     def build(self, makepkgdir):
         subprocess.run(['makechrootpkg', '-c', '-u', '-l', 'working', '-r',

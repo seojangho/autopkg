@@ -81,6 +81,11 @@ def is_official_package(pkgname):
         return pkgname in this.cached
 
 
+def is_chroot_btrfs():
+    return subprocess.run(['stat', '-f', '-c', '%T', Config.chroot()],
+            stdout=subprocess.PIPE).stdout.decode().strip() == 'btrfs'
+
+
 class JSONStore:
     def __init__(self, path):
         self.path = path
