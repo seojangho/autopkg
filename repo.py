@@ -71,7 +71,7 @@ class Repo:
         subprocess.run(self.sudocmd + ['repo-remove'] + self.signcmd + [self.db, pkgname])
         os.unlink(self.pkgfile_path(pkgname))
         if self.sign:
-            os.unlink(self.pkgfile_path(pkgname + '.sig'))
+            os.unlink(self.pkgfile_path(pkgname) + '.sig')
 
     def pkgfile_path(self, pkgname):
         return get_pkgfile_path(self.dir, pkgname)
