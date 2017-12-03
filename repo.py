@@ -60,7 +60,9 @@ class Repo:
     def add(self, pkgfilepath):
         pkgname, pkgver = pkgname_pkgver(pkgfilepath)
         subprocess.run(self.sudocmd + ['cp', pkgfilepath, self.dir])
-        subprocess.run(self.sudocmd + ['cp', pkgfilepath + '.sig', self.dir])
+        if self.sign:
+            subprocess.run(self.sudocmd + ['gpg', '--detach-sign', '--no-armor', pkgfilepath])
+            subprocess.run(self.sudocmd + ['cp', pkgfilepath + '.sig', self.dir])
         subprocess.run(self.sudocmd + ['repo-add', '-R'] + self.signcmd + [self.db, pkgfilepath])
         self.packages[pkgname] = pkgver
 
@@ -68,6 +70,8 @@ class Repo:
         del self.packages[pkgname]
         subprocess.run(self.sudocmd + ['repo-remove'] + self.signcmd + [self.db, pkgname])
         os.unlink(self.pkgfile_path(pkgname))
+        if self.sign:
+            os.unlink(self.pkgfile_path(pkgname + '.sig'))
 
     def pkgfile_path(self, pkgname):
         return get_pkgfile_path(self.dir, pkgname)

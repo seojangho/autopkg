@@ -72,8 +72,7 @@ class GnomeShellExtensionBackend:
                     info.link, info.download_url, info.uuid, info.download_url.split('/')[-1])
             with open(pkgbuilddir + '/PKGBUILD', 'w') as f:
                 f.write(pkgbuild)
-            subprocess.run(['makepkg', '--nodeps', '--sign', '--key', utils.Config.gpgkey()],
-                    cwd=pkgbuilddir)
+            subprocess.run(['makepkg', '--nodeps'], cwd=pkgbuilddir)
             built = repo.get_pkgfile_path(pkgbuilddir, info.pkgname, '{}-1'.format(info.version))
             if built is None:
                 raise Exception('Build error')
