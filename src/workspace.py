@@ -2,8 +2,8 @@
 
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
-from environment import mkdir
-from environment import workspaces_home
+from utils import mkdir
+from utils import workspaces_home
 
 
 @contextmanager

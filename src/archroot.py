@@ -2,7 +2,7 @@
 
 from contextlib import contextmanager
 from workspace import workspace
-from environment import mkdir
+from utils import mkdir
 from os.path import join
 
 

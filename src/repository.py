@@ -2,7 +2,7 @@
 
 from os.path import join
 from os.path import exists
-from environment import run
+from utils import run
 
 
 class Repository:
