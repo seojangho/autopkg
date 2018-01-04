@@ -45,3 +45,5 @@ class Repository:
                 sudo=self.sudo)
         run(['repo-add', '-R'] + self.sign_parameters + [self.db_path, repository_package_path], sudo=self.sudo)
         self.packages[package.name] = package
+
+    # TODO remove...
