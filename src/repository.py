@@ -1,19 +1,20 @@
 #!/usr/bin/python3
 
-from contextlib import contextmanager
-
-
-@contextmanager
-def repository(path):
-    """ :param path: Path to the repository.
-    :return: Context manager for the Arch repository.
-    """
-    yield Repository(path)
+from os.path import join
+from os.path import exists
+from environment import run
 
 
 class Repository:
     """ An Arch repository. """
 
-    def __init__(self, path):
-        """ :param path: Path to this repository. """
+    def __init__(self, name, path):
+        """ :param name: The name of this repository.
+        :param path: Path to this repository.
+        """
+        self.name = name
         self.path = path
+
+        db = join(path, name + '.db')
+        if not exists(db):
+            run(['repo-add', db])
