@@ -4,6 +4,8 @@ from pathlib import Path
 from os.path import join
 from os import environ
 from os import makedirs
+from subprocess import run
+from subprocess import PIPE
 
 
 home = str(Path.home())
@@ -12,10 +14,14 @@ workspaces_home = join(autopkg_home, 'workspaces')
 config_home = join(autopkg_home, 'config')
 
 
-def mkdir(path):
+def mkdir(path, sudo=False):
     """ Recursively create directories.
     :param path: The leaf directory to create.
+    :param sudo: Whether to execute using sudo(1) or not.
     :return: The path to the leaf directory.
     """
-    makedirs(path, mode=0o700, exist_ok=True)
+    if sudo:
+        run(['sudo', 'mkdir', '-p', path], stderr=PIPE).check_returncode()
+    else:
+        makedirs(path, exist_ok=True)
     return path
