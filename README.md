@@ -8,3 +8,5 @@
 * `devtools`
 * `btrfs-progs`
 * `sudo`
+* `gnupg`
+* `git`
