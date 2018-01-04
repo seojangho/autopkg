@@ -43,7 +43,24 @@ class Package:
 
     def package_file_name_pattern(self):
         """ :return: Prefix of the possible name of package file. """
+        # TODO "Pick" package file from the specified directory
         return '{}-{}-{}'.format(self.name, self.version, '' if self.arch is None else self.arch)
+
+
+class PackageInfo:
+    # TODO AURBuildItem: aurbuilditem.write_pkgbuild_to(path)
+    # TODO GitBuildItem: gitbuilditem.write_pkgbuild_to(path)
+    # TODO GShellExtBuildItem: gshellextbuilditem.write_pkgbuild_to(path)
+    # TODO AUR backend: use aur.archlinux.org/packages.gz
+
+    # TODO type(aurbuilditem.pkgbuild) is package.PkgBuild
+    # TODO type(aurbuilditem.chroot_required) is bool
+    # TODO type(aurbuilditem.build_dependencies) is list of other BuildItems
+
+    # TODO builder 1) resolves dependencies 2) builds builditems as needed
+
+    # TODO in short, backend provides two thigns - 1) .write_pkgbuild_to 2) query PackageInfo from package name
+    pass
 
 
 class Version:
