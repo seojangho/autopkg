@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from contextlib import contextmanager
-from workspace import workspace
+from utils import workspace
 from utils import mkdir
 from os.path import join
 
