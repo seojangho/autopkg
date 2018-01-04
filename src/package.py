@@ -54,7 +54,7 @@ class PackageInfo:
     # TODO AUR backend: use aur.archlinux.org/packages.gz
 
     # TODO type(aurbuilditem.pkgbuild) is package.PkgBuild
-    # TODO type(aurbuilditem.chroot_required) is bool
+    # TODO type(aurbuilditem.chroot_required) is bool (NOTE: if build_dependencies is not [], chroot is enforced)
     # TODO type(aurbuilditem.build_dependencies) is list of other BuildItems
 
     # TODO builder 1) resolves dependencies 2) builds builditems as needed
