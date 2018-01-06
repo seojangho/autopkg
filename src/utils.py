@@ -7,6 +7,7 @@ from os.path import join
 from os import environ
 from subprocess import run as subprocess_run
 from subprocess import PIPE
+from subprocess import CalledProcessError
 from json import loads
 from json import dumps
 from json.decoder import JSONDecodeError
@@ -28,8 +29,11 @@ def run(command, sudo=False):
     prefix = ['sudo'] if sudo else []
     cmd = prefix + command
     log(LogLevel.fine, ' '.join(cmd))
-    return subprocess_run(cmd, stdout=PIPE, stderr=PIPE, check=True, encoding='utf-8').stdout
-
+    try:
+        return subprocess_run(cmd, stdout=PIPE, stderr=PIPE, check=True, encoding='utf-8').stdout
+    except CalledProcessError as e:
+        log(LogLevel.error, e.stderr)
+        raise e
 
 def mkdir(path, sudo=False):
     """ Recursively create directories.

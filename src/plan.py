@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+from utils import log
+from utils import LogLevel
+
 
 class Plan:
     """ Physical build/keep plan. """
@@ -53,6 +56,8 @@ def convert_graph_to_plan(graph, repository):
     :param repository: The current repository.
     :return: List of BuildPlans to execute in order.
     """
+    for not_found in [edge.pkgname for edge in graph if edge.vertex_to is None]:
+        log(LogLevel.error, "Not found: {}", not_found)
     # Root buildable with 'light' dependencies comes first.
     root_edges = [edge for edge in graph if edge.vertex_to is not None].sort(
         key=lambda edge: edge.vertex_to.num_build_time_dependencies)

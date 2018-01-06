@@ -23,7 +23,7 @@ class Repository:
         self.sign_parameters = ['-s', '-k', sign_key] if sign_key else []
         self.sudo = sudo
 
-        self.db_path = join(path, name + '.db')
+        self.db_path = join(path, name + '.db.tar.gz')
         if not exists(self.db_path):
             run(['repo-add', self.db_path], sudo=sudo)
 
