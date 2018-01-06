@@ -59,8 +59,8 @@ def convert_graph_to_plan(graph, repository):
     for not_found in [edge.pkgname for edge in graph if edge.vertex_to is None]:
         log(LogLevel.error, "Not found: {}", not_found)
     # Root buildable with 'light' dependencies comes first.
-    root_edges = [edge for edge in graph if edge.vertex_to is not None].sort(
-        key=lambda edge: edge.vertex_to.num_build_time_dependencies)
+    root_edges = [edge for edge in graph if edge.vertex_to is not None]
+    root_edges.sort(key=lambda edge: edge.vertex_to.num_build_time_dependencies)
     pkgbase_to_plan = dict()
     lists_of_plans = [do_visit_vertex(edge.vertex_to, repository, [], pkgbase_to_plan) for edge in root_edges]
     return [plan for plans in lists_of_plans for plan in plans]
