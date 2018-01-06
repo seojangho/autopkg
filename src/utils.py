@@ -72,6 +72,7 @@ def config(name):
     :return: Context manager for the configuration file.
     """
     # TODO config lockfile
+    # TODO autopkg run_lock
     with open(join(mkdir(config_home), name + '.json'), mode='a+t') as file:
         try:
             json = loads(file.read())
