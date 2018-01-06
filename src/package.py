@@ -32,8 +32,8 @@ class PackageTinyInfo:
         return '\'' + self.__str__() + '\''
 
 
-class PackageInfo:
-    """ Same as PackageInfo, but it has 'arch' attribute. """
+class PackageMiniInfo:
+    """ Same as PackageTinyInfo, but it has 'arch' attribute. """
 
     def __init__(self, name, version, arch):
         """ :param name: The pkgname of this package.
@@ -66,7 +66,7 @@ class PackageInfo:
         return '{}-{}-{}.pkg.tar.xz'.format(self.name, self.version, self.arch)
 
 
-class PackageBaseInfo:
+class PackageInfo:
     """ Subset of PKGBUILD. """
 
     # TODO AURBuildItem: aurbuilditem.write_pkgbuild_to(path)
@@ -81,32 +81,35 @@ class PackageBaseInfo:
     # TODO builder 1) resolves dependencies 2) builds builditems as needed
 
     # TODO in short, backend provides two thigns - 1) .write_pkgbuild_to 2) query PackageBaseInfo from package name
-    def __init__(self, package_infos, makedepends=[], checkdepends=[], pkgbase=None):
-        """ :param package_infos: List of the PackageInfos this PKGBUILD covers.
-        :param makedepends: List of name of the packages that this PKGBUILD depends on building.
-        :param checkdepends: List of name of the packages that this PKGBUILD depends on running test suites.
-        :param pkgbase: pkgbase variable, if any.
+    def __init__(self, pkgname, version, arch, pkgbase=None, depends=[], makedepends=[], checkdepends=[]):
+        """ :param pkgname: The name of this package.
+        :param version: The version.
+        :param arch: The architecture.
+        :param pkgbase: The pkgbase.
+        :param depends: List of names of packages this package depends on for running.
+        :param makedepends: List of names of packages this package depends on for building.
+        :param checkdepends: List of names of packages this package depends on for build-time checking.
         """
-        if len(package_infos) < 1:
-            raise Exception("This PackageBaseInfo does not define one or more package.")
-        if pkgbase is None and len(package_infos) != 1:
-            raise Exception("This PakcageBaseInfo for split package does not define pkgbase.")
-        self.package_infos = package_infos
-        self.makedepdns = makedepends
-        self.checkdepends = checkdepends
+        self.pkgname = pkgname
+        self.version = Version(version) if type(version) is str else version
+        self.arch = arch
         self.pkgbase = pkgbase
+        self.depends = depends
+        self.makedepends = makedepends
+        self.checkdepends = checkdepends
+        self.mini_info = PackageMiniInfo(pkgname, version, arch)
 
-    @classmethod
-    def for_single_package(cls, name, version, arch, makedepends=[], checkdepends=[]):
-        """ :param name: The pkgname of this package.
-        :param version: The package version.
-        :param arch: The target architecture of this package.
-        :param makedepends: List of name of the packages that this PKGBUILD depends on building.
-        :param checkdepends: List of name of the packages that this PKGBUILD depends on running test suites.
-        :return:
-        """
-        package_info = PackageInfo(name, version, arch)
-        return cls([package_info], makedepends, checkdepends)
+    def __str__(self):
+        """ :return: Representation of this package reference. """
+        return str(self.mini_info)
+
+    def __repr__(self):
+        """ :return: Formal representation of this package reference. """
+        return repr(self.mini_info)
+
+    def package_file_name(self):
+        """ :return: The name of package file. """
+        return self.mini_info.package_file_name()
 
 
 class Version:

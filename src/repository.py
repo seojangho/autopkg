@@ -4,8 +4,8 @@ from os.path import join
 from os.path import exists
 from utils import run
 from tarfile import open as tarfile_open
-from package import PackageInfo
 from package import PackageTinyInfo
+from package import PackageMiniInfo
 
 
 class Repository:
@@ -35,7 +35,7 @@ class Repository:
         """ Adds a package to the repository.
         :param package_file_path: The path to the package file.
         """
-        package = PackageInfo.from_package_file_path(package_file_path)
+        package = PackageMiniInfo.from_package_file_path(package_file_path)
         if package.name in self.packages and self.packages[package.name].version == package.version:
             return
         run(['cp', package_file_path, self.directory], sudo=self.sudo)

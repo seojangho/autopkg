@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-# TODO build_item: wrilte_pkgbuild_to, package_base_info, chroot_required
+# TODO buildable: wrilte_pkgbuild_to, package_info, chroot_required, pkgbase_reference
 
 
 class DependencyType(Enum):
@@ -17,25 +17,64 @@ class DependencyType(Enum):
 class DependencyVertex:
     """ Represents dependency node. """
 
-    def __init__(self, build_item, edges):
-        """ :param build_item: The corresponding build item.
-        :param edges: List of edges that represents dependency for building this package-base.
+    def __init__(self, buildable, edges):
+        """ :param buildable: The corresponding buildable from the backend.
+        :param edges: List of edges that represents dependency for running or building this package.
         """
-        self.build_item = build_item
+        self.buildable = buildable
         self.edges = edges
+
+    @classmethod
+    def from_buildable(cls, buildable):
+        """ :param buildable: The Buildable.
+        :return: The DependencyVertex for this Buildable.
+        """
+        edges = []
+        package_info = buildable.package_info
+        for dependency in set(package_info.depends + package_info.makedepends + package_info.checkdepends):
+            if dependency in package_info.makedepends:
+                edges.append(DependencyEdge(dependency, DependencyType.make))
+            elif dependency in package_info.checkdepends:
+                edges.append(DependencyEdge(dependency, DependencyType.check))
+            else:
+                edges.append(DependencyEdge(dependency, DependencyType.run))
+        return cls(buildable, edges)
+
+    def __str__(self):
+        """ :return: Representation for this DependencyVertex. """
+        return 'DependencyVertex({})'.format(self.buildable.package_info.pkgname)
+
+    def __repr__(self):
+        """ :return: Formal representation for this DependencyVertex. """
+        return 'DependencyVertex({}, {})'.format(repr(self.buildable), repr(self.edges))
+
+    @property
+    def num_build_time_dependencies(self):
+        """ :return: The number of build-time dependencies. """
+        return sum(1 for edge in self.edges if edge.is_build_time_dependency)
 
 
 class DependencyEdge:
     """ Represents dependency relationship. """
 
     def __init__(self, pkgname, dependency_type):
-        """ :param pkgname: The package name to depend on.
+        """ :param pkgname: The name of package to depend on
         :param dependency_type: The type of dependency.
         """
         self.pkgname = pkgname
+        self.dependency_type = dependency_type
         self.is_resolved = False
         self.vertex_to = None
-        self.dependency_type = dependency_type
+
+    def __str__(self):
+        """ :return: Representation for this DependencyEdge. """
+        return 'DependencyEdge({}, {}, is_resolved={}, vertex_to={})'.format(self.pkgname, self.dependency_type,
+                                                                             self.is_resolved, self.vertex_to)
+
+    def __repr__(self):
+        """ :return: Formal representation for this DependencyEdge. """
+        return 'DependencyEdge({}, {}, is_resolved={}, vertex_to={})'.format(self.pkgname, self.dependency_type,
+                                                                             self.is_resolved, repr(self.vertex_to))
 
     def resolve(self, vertex_to):
         """ Resolve the dependency by setting appropriate DependencyVertex for this edge.
@@ -51,41 +90,25 @@ class DependencyEdge:
         """ :return: True if and only if this dependency relationship is build-time dependency. """
         return self.dependency_type != DependencyType.run
 
-    @classmethod
-    def from_package_base_info(cls, package_base_info):
-        """ :param package_base_info: The PackageBaseInfo.
-        :return: List of DependencyEdges.
-        """
-        dependencies = []
-        for dependency in set(package_base_info.depends + package_base_info.makedepends +
-                              package_base_info.checkdepends):
-            if dependency in package_base_info.makedepends:
-                dependencies.append(DependencyEdge(dependency, DependencyType.make))
-            elif dependency in package_base_info.checkdepends:
-                dependencies.append(DependencyEdge(dependency, DependencyType.check))
-            else:
-                dependencies.append(DependencyEdge(dependency, DependencyType.run))
-        return dependencies
-
 
 def query_by_pkgnames(pkgnames, backends):
     """ Obtain BuildItems from package names.
     :param pkgnames: List of package names.
     :param backends: List of backends, sorted by priority.
-    :return: List of the found build items.
+    :return: List of the found buildables.
     """
     names = list(pkgnames)
-    build_items = list()
+    buildables = list()
     for backend in backends:
-        items = backend(names)
-        build_items += items
-        resolved = [package_info.name for item in items for package_info in item.package_base_info.package_infos]
+        new_buildables = backend(names)
+        buildables += new_buildables
+        resolved = [buildable.package_info.pkgname for buildable in new_buildables]
         names = [name for name in names if name not in resolved]
-    return build_items
+    return buildables
 
 
 def build_dependency_graph(pkgnames, backends):
-    """ Obtain dependency graph with BuildItems as vertices and DependencyEdges as edges.
+    """ Obtain dependency graph with DependencyVertex as vertices and DependencyEdges as edges.
     :param pkgnames: List of package names.
     :param backends: List of backends, sorted by priority.
     :return: List of DependencyEdges from the root vertex of the graph.
@@ -96,21 +119,15 @@ def build_dependency_graph(pkgnames, backends):
     while len(unresolved_edges) > 0:
         unresolved_pkgnames = [unresolved_edge.pkgname for unresolved_edge in unresolved_edges]
         new_vertices = list()
-        for build_item in query_by_pkgnames(unresolved_pkgnames, backends):
-            add_vertex_to_graph = False
-            for package_info in build_item.package_base_info.package_infos:
-                if package_info.name in unresolved_pkgname:
-                    unresolved_pkgnames.remove(package_info.name)
-                    add_vertex_to_graph = True
-            if not add_vertex_to_graph:
+        for buildable in query_by_pkgnames(unresolved_pkgnames, backends):
+            if buildable.package_info.pkgname not in unresolved_pkgname:
                 # Since this BuildItem does not contribute to resolving packages, discard it.
+                # Maybe buildable.package_info.pkgname has been resolved by other Buildable ahead.
                 continue
-            new_vertex = DependencyVertex(build_item,
-                                          DependencyEdge.from_package_base_info(build_item.package_base_info))
+            unresolved_pkgnames.remove(buildable.package_info.pkgname)
+            new_vertex = DependencyVertex.from_buildable(buildable)
             new_vertices.append(new_vertex)
-            for package_info in build_item.package_base_info.package_infos:
-                if package_info.name not in pkgname_to_vertex:
-                    pkgname_to_vertex[package_info.name] = new_vertex
+            pkgname_to_vertex[buildable.package_info.pkgname] = new_vertex
         for unresolved_pkgname in unresolved_pkgnames:
             # We have tried to find BuildItem for unresolved_pkgname, but it was unable to obtain.
             # Maybe it's from official repositories.
