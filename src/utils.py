@@ -79,6 +79,7 @@ def config(name):
     """ :param name: Name of the configuration file.
     :return: Context manager for the configuration file.
     """
+    # TODO config lockfile
     with open(join(mkdir(config_home), name + '.json'), mode='a+t') as file:
         try:
             json = loads(file.read())

@@ -47,3 +47,4 @@ class Repository:
         self.packages[package.name] = package
 
     # TODO remove...
+    # TODO Repo lockfile
