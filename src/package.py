@@ -81,7 +81,7 @@ class PackageBaseInfo:
     # TODO builder 1) resolves dependencies 2) builds builditems as needed
 
     # TODO in short, backend provides two thigns - 1) .write_pkgbuild_to 2) query PackageBaseInfo from package name
-    def __init__(self, package_infos, makedepends_infos, checkdepends_infos, pkgbase=None):
+    def __init__(self, package_infos, makedepends_infos=[], checkdepends_infos=[], pkgbase=None):
         """ :param package_infos: List of the PackageInfos this PKGBUILD covers.
         :param makedepends_infos: List of name of the packages that this PKGBUILD depends on building.
         :param checkdepends_infos: List of name of the packages that this PKGBUILD depends on running test suites.
@@ -93,7 +93,7 @@ class PackageBaseInfo:
         self.pkgbase = pkgbase
 
     @classmethod
-    def for_single_package(cls, name, version, arch, makedepends_infos, checkdepends_infos):
+    def for_single_package(cls, name, version, arch, makedepends_infos=[], checkdepends_infos=[]):
         """ :param name: The pkgname of this package.
         :param version: The package version.
         :param arch: The target architecture of this package.
