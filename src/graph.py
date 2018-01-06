@@ -60,17 +60,25 @@ def build_dependency_graph(pkgnames, backends):
     unresolved_edges = list(root_edges)
     while len(unresolved_edges) != 0:
         unresolved_pkgnames = [unresolved_edge.pkgname for unresolved_edge in unresolved_edges]
-        build_items = query_by_pkgnames(unresolved_pkgnames, backends)
         new_vertices = list()
-        for build_item in build_items:
-            package_base_info = build_item.package_base_info
+        for build_item in query_by_pkgnames(unresolved_pkgnames, backends):
+            add_vertex_to_graph = False
             edges = [DependencyEdge(name) for name
-                     in set(*package_base_info.makedepends, *package_base_info.checkdepends)]
+                     in set(build_item.package_base_info.makedepends + build_item.package_base_info.checkdepends)]
             new_vertex = DependencyVertex(build_item, edges)
+            for package_info in build_item.package_base_info.package_infos:
+                if package_info.name in unresolved_pkgname:
+                    unresolved_pkgnames.remove(package_info.name)
+                    add_vertex_to_graph = True
+            if not add_vertex_to_graph:
+                continue
             new_vertices.append(new_vertex)
-
+            for package_info in build_item.package_base_info.package_infos:
+                if package_info.name not in pkgname_to_vertex:
+                    pkgname_to_vertex[package_info.name] = new_vertex
+        for unresolved_pkgname in unresolved_pkgnames:
+            pkgname_to_vertex[unresolved_pkgname] = None
         for unresolved_edge in unresolved_edges:
-            vertex = pkgname_to_vertex[unresolved_edge.pkgname]
-            unresolved_edge.resolve(vertex)
-        unresolved_edges = list()
+            unresolved_edge.resolve(pkgname_to_vertex[unresolved_edge.pkgname])
+        unresolved_edges = [edge for edge in vertex.edges for vertex in new_vertices]
     return root_edges
