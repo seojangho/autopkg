@@ -9,9 +9,9 @@ from os.path import join
 @contextmanager
 def arch_root():
     """ :return: Context manager for an Arch chroot. """
-    with workspace() as ws:
+    with workspace() as path:
         pass
-        # mkdir(join(ws.path, 'root'))
+        # mkdir(join(path, 'root'))
 
 
 class ArchRoot:
