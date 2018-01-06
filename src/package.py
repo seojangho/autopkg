@@ -87,6 +87,10 @@ class PackageBaseInfo:
         :param checkdepends: List of name of the packages that this PKGBUILD depends on running test suites.
         :param pkgbase: pkgbase variable, if any.
         """
+        if len(package_infos) < 1:
+            raise Exception("This PackageBaseInfo does not define one or more package.")
+        if pkgbase is None and len(package_infos) != 1:
+            raise Exception("This PakcageBaseInfo for split package does not define pkgbase.")
         self.package_infos = package_infos
         self.makedepdns = makedepends
         self.checkdepends = checkdepends
