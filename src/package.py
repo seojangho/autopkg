@@ -4,16 +4,15 @@ from utils import run
 from os.path import basename
 
 
-class Package:
+class PackageTinyInfo:
     """ A reference that represents a particular package. """
-    def __init__(self, name, version, arch=None):
+
+    def __init__(self, name, version):
         """ :param name: The pkgname of this package.
         :param version: The package version.
-        :param arch: The target architecture of this package. None means unknown.
         """
         self.name = name
         self.version = Version(version) if type(version) is str else version
-        self.arch = arch
 
     @classmethod
     def from_repodb_directory_name(cls, directory_name):
@@ -24,6 +23,27 @@ class Package:
         split = directory_name.split('-')
         return cls('-'.join(split[:-2]), '-'.join(split[-2:]))
 
+    def __str__(self):
+        """ :return: Representation of this package reference. """
+        return '{}-{}'.format(self.name, self.version)
+
+    def __repr__(self):
+        """ :return: Formal representation of this package reference. """
+        return '\'' + self.__str__() + '\''
+
+
+class PackageInfo:
+    """ Same as PackageInfo, but it has 'arch' attribute. """
+
+    def __init__(self, name, version, arch):
+        """ :param name: The pkgname of this package.
+        :param version: The package version.
+        :param arch: The target architecture of this package.
+        """
+        self.name = name
+        self.version = Version(version) if type(version) is str else version
+        self.arch = arch
+
     @classmethod
     def from_package_file_path(cls, path):
         """ Obtains package reference from the path to a package file.
@@ -31,23 +51,24 @@ class Package:
         :return: The package reference.
         """
         split = basename(path).split('-')
-        return cls('-'.join(split[:-3]), '-'.join(split[-3:-1]), arch=split[-1].split('.')[0])
+        return cls('-'.join(split[:-3]), '-'.join(split[-3:-1]), split[-1].split('.')[0])
 
     def __str__(self):
         """ :return: Representation of this package reference. """
-        return '{}-{}-{}'.format(self.name, self.version, 'UNKNOWN' if self.arch is None else self.arch)
+        return '{}-{}-{}'.format(self.name, self.version, self.arch)
 
     def __repr__(self):
         """ :return: Formal representation of this package reference. """
         return '\'' + self.__str__() + '\''
 
-    def package_file_name_pattern(self):
-        """ :return: Prefix of the possible name of package file. """
-        # TODO "Pick" package file from the specified directory
-        return '{}-{}-{}'.format(self.name, self.version, '' if self.arch is None else self.arch)
+    def package_file_name(self):
+        """ :return: The name of package file. """
+        return '{}-{}-{}.pkg.tar.xz'.format(self.name, self.version, self.arch)
 
 
-class PackageInfo:
+class PackageBaseInfo:
+    """ Subset of PKGBUILD. """
+
     # TODO AURBuildItem: aurbuilditem.write_pkgbuild_to(path)
     # TODO GitBuildItem: gitbuilditem.write_pkgbuild_to(path)
     # TODO GShellExtBuildItem: gshellextbuilditem.write_pkgbuild_to(path)
@@ -59,8 +80,29 @@ class PackageInfo:
 
     # TODO builder 1) resolves dependencies 2) builds builditems as needed
 
-    # TODO in short, backend provides two thigns - 1) .write_pkgbuild_to 2) query PackageInfo from package name
-    pass
+    # TODO in short, backend provides two thigns - 1) .write_pkgbuild_to 2) query PackageBaseInfo from package name
+    def __init__(self, package_infos, makedepends_infos, checkdepends_infos, pkgbase=None):
+        """ :param package_infos: List of the PackageInfos this PKGBUILD covers.
+        :param makedepends_infos: List of name of the packages that this PKGBUILD depends on building.
+        :param checkdepends_infos: List of name of the packages that this PKGBUILD depends on running test suites.
+        :param pkgbase: pkgbase variable, if any.
+        """
+        self.package_infos = package_infos
+        self.makedepdns_infos = makedepends_infos
+        self.checkdepends_infos = checkdepends_infos
+        self.pkgbase = pkgbase
+
+    @classmethod
+    def for_single_package(cls, name, version, arch, makedepends_infos, checkdepends_infos):
+        """ :param name: The pkgname of this package.
+        :param version: The package version.
+        :param arch: The target architecture of this package.
+        :param makedepends_infos: List of name of the packages that this PKGBUILD depends on building.
+        :param checkdepends_infos: List of name of the packages that this PKGBUILD depends on running test suites.
+        :return:
+        """
+        package_info = PackageInfo(name, version, arch)
+        return cls([package_info], makedepends_infos, checkdepends_infos)
 
 
 class Version:

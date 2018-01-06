@@ -2,10 +2,10 @@
 
 from os.path import join
 from os.path import exists
-from os.path import basename
 from utils import run
 from tarfile import open as tarfile_open
-from package import Package
+from package import PackageInfo
+from package import PackageTinyInfo
 
 
 class Repository:
@@ -27,7 +27,7 @@ class Repository:
         if not exists(self.db_path):
             run(['repo-add', self.db_path], sudo=sudo)
 
-        packages = [Package.from_repodb_directory_name(member.name) for member
+        packages = [PackageTinyInfo.from_repodb_directory_name(member.name) for member
                     in tarfile_open(self.db_path).getmembers() if member.isdir()]
         self.packages = {package.name: package for package in packages}
 
@@ -35,11 +35,11 @@ class Repository:
         """ Adds a package to the repository.
         :param package_file_path: The path to the package file.
         """
-        package = Package.from_package_file_path(package_file_path)
+        package = PackageInfo.from_package_file_path(package_file_path)
         if package.name in self.packages and self.packages[package.name].version == package.version:
             return
         run(['cp', package_file_path, self.directory], sudo=self.sudo)
-        repository_package_path = join(self.directory, basename(package_file_path))
+        repository_package_path = join(self.directory, package.package_file_name())
         if self.sign_key:
             run(['gpg', '--detach-sign', '--no-armor', '--default-key', self.sign_key, repository_package_path],
                 sudo=self.sudo)
