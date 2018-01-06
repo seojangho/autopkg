@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from contextlib import contextmanager
+from urllib.request import urlopen
 from tempfile import TemporaryDirectory
 from pathlib import Path
 from os.path import join
@@ -20,20 +21,33 @@ workspaces_home = join(autopkg_home, 'workspaces')
 config_home = join(autopkg_home, 'config')
 
 
-def run(command, sudo=False):
+def run(command, sudo=False, cwd=None):
     """
     :param command: The command to run.
     :param sudo: Whether to execute the command using sudo(1) or not.
+    :param cwd: Working directory.
     :return: The captured standard output.
     """
     prefix = ['sudo'] if sudo else []
     cmd = prefix + command
     log(LogLevel.fine, ' '.join(cmd))
     try:
-        return subprocess_run(cmd, stdout=PIPE, stderr=PIPE, check=True, encoding='utf-8').stdout
+        return subprocess_run(cmd, cwd=cwd, stdout=PIPE, stderr=PIPE, check=True, encoding='utf-8').stdout
     except CalledProcessError as e:
         log(LogLevel.error, e.stderr)
         raise e
+
+
+def url_read(url_format, *args):
+    """ :param url_format: Format string for the URL of the resource.
+    :param args: Format arguments.
+    :return: Fetched response.
+    """
+    url = url_format.format(*args)
+    log(LogLevel.fine, url)
+    with urlopen(url) as response:
+        return response.read()
+
 
 def mkdir(path, sudo=False):
     """ Recursively create directories.

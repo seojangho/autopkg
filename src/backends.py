@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 from utils import run
+from utils import url_read
+from gzip import decompress
 
 
 class PkgbaseReference:
@@ -48,3 +50,9 @@ def aur_backend(pkgnames):
     """ :param pkgnames: The names of the packages to lookup.
     :return: List of related AURBuildables.
     """
+    try:
+        aur_backend.aur_packages
+    except AttributeError:
+        fetched = url_read('https://aur.archlinux.org/packages.gz')
+        aur_backend.aur_packages = [name for name in decompress(fetched).decode().splitlines()
+                                    if len(name) > 0 and name[0] != '#']

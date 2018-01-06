@@ -2,8 +2,6 @@
 
 from enum import Enum
 
-# TODO buildable: wrilte_pkgbuild_to, package_info, chroot_required, pkgbase_reference
-
 
 class DependencyType(Enum):
     """ Type of dependencies """

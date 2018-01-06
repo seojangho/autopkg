@@ -69,8 +69,6 @@ class PackageMiniInfo:
 class PackageInfo:
     """ Subset of PKGBUILD. """
 
-    # TODO AUR backend: use aur.archlinux.org/packages.gz
-
     def __init__(self, pkgname, version, arch, pkgbase=None, depends=[], makedepends=[], checkdepends=[]):
         """ :param pkgname: The name of this package.
         :param version: The version.
