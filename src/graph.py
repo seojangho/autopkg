@@ -68,6 +68,7 @@ def build_dependency_graph(pkgnames, backends):
                     unresolved_pkgnames.remove(package_info.name)
                     add_vertex_to_graph = True
             if not add_vertex_to_graph:
+                # Since this BuildItem does not contribute to resolving packages, discard it.
                 continue
             edges = [DependencyEdge(name) for name
                      in set(build_item.package_base_info.makedepends + build_item.package_base_info.checkdepends)]
@@ -77,11 +78,15 @@ def build_dependency_graph(pkgnames, backends):
                 if package_info.name not in pkgname_to_vertex:
                     pkgname_to_vertex[package_info.name] = new_vertex
         for unresolved_pkgname in unresolved_pkgnames:
+            # We have tried to find BuildItem for unresolved_pkgname, but it was unable to obtain.
+            # Maybe it's from official repositories.
             pkgname_to_vertex[unresolved_pkgname] = None
         for unresolved_edge in unresolved_edges:
             unresolved_edge.resolve(pkgname_to_vertex[unresolved_edge.pkgname])
         for unresolved_edge in [edge for vertex in new_vertices for edge in vertex.edges]:
+            # Resolve dependencies for newly added vertices, if possible.
             if unresolved_edge.pkgname in pkgname_to_vertex:
                 unresolved_edge.resolve(pkgname_to_vertex[unresolved_edge.pkgname])
+        # Unresolved dependencies for newly added vertices will be handled in the next round.
         unresolved_edges = [edge for vertex in new_vertices for edge in vertex.edges if not edge.is_resolved]
     return root_edges
