@@ -44,7 +44,7 @@ def query_by_pkgnames(pkgnames, backends):
     for backend in backends:
         items = backend(names)
         build_items += items
-        resolved = [package_info.name for package_info in item.package_base_info.package_infos for item in items]
+        resolved = [package_info.name for item in items for package_info in item.package_base_info.package_infos]
         names = [name for name in names if name not in resolved]
     return build_items
 
@@ -80,5 +80,5 @@ def build_dependency_graph(pkgnames, backends):
             pkgname_to_vertex[unresolved_pkgname] = None
         for unresolved_edge in unresolved_edges:
             unresolved_edge.resolve(pkgname_to_vertex[unresolved_edge.pkgname])
-        unresolved_edges = [edge for edge in vertex.edges for vertex in new_vertices]
+        unresolved_edges = [edge for vertex in new_vertices for edge in vertex.edges]
     return root_edges
