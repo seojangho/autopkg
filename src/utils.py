@@ -10,6 +10,7 @@ from subprocess import PIPE
 from json import loads
 from json import dumps
 from json.decoder import JSONDecodeError
+from enum import Enum
 
 
 home = str(Path.home())
@@ -25,7 +26,9 @@ def run(command, sudo=False):
     :return: The captured standard output.
     """
     prefix = ['sudo'] if sudo else []
-    return subprocess_run(prefix + command, stdout=PIPE, stderr=PIPE, check=True, encoding='utf-8').stdout
+    cmd = prefix + command
+    log(LogLevel.fine, ' '.join(cmd))
+    return subprocess_run(cmd, stdout=PIPE, stderr=PIPE, check=True, encoding='utf-8').stdout
 
 
 def mkdir(path, sudo=False):
@@ -68,3 +71,33 @@ def config(name):
             file.truncate(0)
             file.seek(0)
             file.write(dumps(json))
+
+
+class LogLevel(Enum):
+    """ Log levels. """
+
+    error = 0
+    warning = 1
+    info = 2
+    header = 3
+    good = 4
+    fine = 5
+
+
+LOG_LEVEL_TO_COLOR = {LogLevel.error: [31],
+                      LogLevel.warning: [33],
+                      LogLevel.info: [],
+                      LogLevel.header: [1, 4],
+                      LogLevel.good: [32],
+                      LogLevel.fine: [2]}
+
+
+def log(log_level, content, *args):
+    """ Emit log entry.
+    :param log_level: The LogLevel.
+    :param content: The log content.
+    :param args: Arguments for the format string.
+    """
+    text = str(content).format(*args)
+    color_code_start = ''.join(['\033[{}m'.format(code) for code in LOG_LEVEL_TO_COLOR[log_level]])
+    print('{}{}\033[0m'.format(color_code_start, text))
