@@ -8,7 +8,7 @@ from enum import Enum
 class DependencyType(Enum):
     """ Type of dependencies """
 
-    root = 0
+    explicit = 0
     run = 1
     make = 2
     check = 3
@@ -113,7 +113,7 @@ def build_dependency_graph(pkgnames, backends):
     :param backends: List of backends, sorted by priority.
     :return: List of DependencyEdges from the root vertex of the graph.
     """
-    root_edges = [DependencyEdge(pkgname, DependencyType.root) for pkgname in set(pkgnames)]
+    root_edges = [DependencyEdge(pkgname, DependencyType.explicit) for pkgname in set(pkgnames)]
     pkgname_to_vertex = dict()
     unresolved_edges = list(root_edges)
     while len(unresolved_edges) > 0:
