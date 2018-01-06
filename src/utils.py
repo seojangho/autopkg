@@ -82,6 +82,7 @@ class LogLevel(Enum):
     header = 3
     good = 4
     fine = 5
+    debug = 6
 
 
 LOG_LEVEL_TO_COLOR = {LogLevel.error: [31],
@@ -89,7 +90,16 @@ LOG_LEVEL_TO_COLOR = {LogLevel.error: [31],
                       LogLevel.info: [],
                       LogLevel.header: [1, 4],
                       LogLevel.good: [32],
-                      LogLevel.fine: [2]}
+                      LogLevel.fine: [2],
+                      LogLevel.debug: None}
+
+
+def color(text, codes):
+    """ :param text: The text.
+    :param codes: Color codes to apply.
+    :return: Colored text for terminal.
+    """
+    return '{}{}\033[0m'.format(''.join(['\033[{}m'.format(code) for code in codes]), text)
 
 
 def log(log_level, content, *args):
@@ -99,5 +109,8 @@ def log(log_level, content, *args):
     :param args: Arguments for the format string.
     """
     text = str(content).format(*args)
-    color_code_start = ''.join(['\033[{}m'.format(code) for code in LOG_LEVEL_TO_COLOR[log_level]])
-    print('{}{}\033[0m'.format(color_code_start, text))
+    # TODO: Write to log file
+    codes = LOG_LEVEL_TO_COLOR[log_level]
+    if codes is None:
+        return
+    print(color(text, codes))
