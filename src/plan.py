@@ -92,8 +92,10 @@ def do_visit_vertex(vertex, repository, required_by, pkgbase_to_plan):
     pkgbase = vertex.buildable.pkgbase_reference
     # Recursive incarnation of 'do_visit_vertex' may have created Plan for this package
     # while resolving cyclic dependency due to runtime dependencies.
+    # So we double-check the existence.
     if pkgbase not in pkgbase_to_plan:
         pkgbase_to_plan[pkgbase] = Plan.from_buildable(vertex.buildable)
+        plan.append(pkgbase_to_plan[pkgbase])
     pkgbase_to_plan[pkgbase].add(pkgname, repository)
     return plan
 
