@@ -17,6 +17,7 @@ from graph import build_dependency_graph
 from plan import convert_graph_to_plans
 from builder import execute_plans_update
 from builder import execute_plans_autoremove
+from builder import autoremovable_packages
 from enum import Enum
 
 
@@ -81,6 +82,13 @@ def do_plans(repository):
         for root_edge in graph:
             log_graph(root_edge, repository, 0)
         plans = convert_graph_to_plans(graph, repository)
+        log(LogLevel.header, 'Plan:')
+        log_plans(plans)
+        to_remove = autoremovable_packages(plans, repository)
+        if len(to_remove) > 0:
+            log(LogLevel.header, 'Auto-removable Packages:')
+            for pkgname in to_remove:
+                log(LogLevel.info, ' - {}', pkgname)
         return plans
 
 
@@ -137,7 +145,19 @@ def transition(old, new):
         return Transition.keep
 
 
-def help(name):
+def log_plans(plans):
+    for plan in plans:
+        buildable = plan.buildable
+        log(LogLevel.info, ' - {}', buildable.pkgbase_reference)
+        for pkgname in plan.build:
+            log(LogLevel.info, '      Build {}', pkgname)
+        for pkgname in plan.requisites:
+            log(LogLevel.info, '       \033[2mWith {}\033[0m', pkgname)
+        for pkgname in plan.keep:
+            log(LogLevel.info, '       \033[2mKeep {}\033[0m', pkgname)
+
+
+def do_help(name):
     print('''Usage:\t{0} targets add [target-package-name-to-add]*
 \t{0} targets remove [target-package-name-to-remove]*
 \t{0} targets list
@@ -177,10 +197,10 @@ def front(name, arguments):
                     plans = do_plans(repository)
                 execute_plans_autoremove(plans, repository)
             else:
-                help(name)
+                do_help(name)
                 if cmdlet != '--help':
                     unknown_command(cmdlet)
                 break
         if len(arguments) == 0:
-            help(name)
+            do_help(name)
         log(LogLevel.debug, 'Exiting...')

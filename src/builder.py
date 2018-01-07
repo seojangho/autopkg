@@ -109,16 +109,25 @@ def do_build(plans, repository, chroot=None):
                 log(LogLevel.good, 'Successfully built {} from {}', pkgname, buildable.pkgbase_reference)
 
 
-def execute_plans_autoremove(plans, repository):
+def autoremovable_packages(plans, repository):
     """ :param plans: Plans to execute.
     :param repository: The main repository.
-    :return: The names of packages auto-removed.
+    :return: The names of packages that can be auto-removed.
     """
     needed = [pkgname for plan in plans for pkgname in plan.build + plan.keep]
     to_remove = list()
     for pkgname in repository.packages.keys():
         if pkgname not in needed:
             to_remove.append(pkgname)
+    return to_remove
+
+
+def execute_plans_autoremove(plans, repository):
+    """ :param plans: Plans to execute.
+    :param repository: The main repository.
+    :return: The names of packages auto-removed.
+    """
+    to_remove = autoremovable_packages(plans, repository)
     for pkgname in to_remove:
         repository.remove(pkgname)
         log(LogLevel.good, 'Removed {}', pkgname)
