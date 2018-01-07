@@ -13,6 +13,9 @@ from json import loads
 from json import dumps
 from json.decoder import JSONDecodeError
 from enum import Enum
+from fcntl import flock
+from fcntl import LOCK_EX
+from fcntl import LOCK_UN
 
 
 home = str(Path.home())
@@ -71,22 +74,39 @@ def workspace():
 
 
 @contextmanager
+def advisory_lock(file):
+    """ :param file: File to get a lock.
+    :return: Context manager for advisory lock on the file.
+    """
+    flock(file, LOCK_EX)
+    yield
+    flock(file, LOCK_UN)
+
+
+@contextmanager
+def run_lock():
+    """ :return: Context manager for run lock. """
+    with open(join(mkdir(autopkg_home), 'run.lock'), mode='a') as file:
+        with advisory_lock(file):
+            yield
+
+
+@contextmanager
 def config(name):
     """ :param name: Name of the configuration file.
     :return: Context manager for the configuration file.
     """
-    # TODO config lockfile
-    # TODO autopkg run_lock
     with open(join(mkdir(config_home), name + '.json'), mode='a+t') as file:
-        try:
-            json = loads(file.read())
-        except JSONDecodeError:
-            json = None
-        yield json
-        if json is not None:
-            file.truncate(0)
-            file.seek(0)
-            file.write(dumps(json))
+        with advisory_lock(file):
+            try:
+                json = loads(file.read())
+            except JSONDecodeError:
+                json = None
+            yield json
+            if json is not None:
+                file.truncate(0)
+                file.seek(0)
+                file.write(dumps(json))
 
 
 class LogLevel(Enum):
