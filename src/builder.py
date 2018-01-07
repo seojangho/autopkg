@@ -10,8 +10,6 @@ from utils import LogLevel
 from os.path import join
 from os.path import isdir
 from repository import Repository
-from graph import build_dependency_graph
-from plan import convert_graph_to_plans
 from subprocess import CalledProcessError
 
 
@@ -71,17 +69,6 @@ def build(pkgbuild_dir):
     :param pkgbuild_dir: The path to the directory where PKGBUILD resides.
     """
     run(['makepkg'], cwd=pkgbuild_dir, capture=False)
-
-
-def generate_plans(pkgnames, backends, repository):
-    """ :param pkgnames: The list of names of packages.
-    :param backends: The list of backends to use.
-    :param repository: The main repository.
-    :return: Plan to build those packages.
-    """
-    graph = build_dependency_graph(pkgnames, backends)
-    plans = convert_graph_to_plans(graph, repository)
-    return plans
 
 
 def execute_plans_update(plans, repository):

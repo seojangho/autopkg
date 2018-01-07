@@ -13,7 +13,8 @@ from utils import sign_key
 from utils import config
 from contextlib import contextmanager
 from utils import mkdir
-from builder import generate_plans
+from graph import build_dependency_graph
+from plan import convert_graph_to_plans
 from builder import execute_plans_update
 from builder import execute_plans_autoremove
 
@@ -74,7 +75,9 @@ def do_packages(arguments, repository):
 
 def do_plans(repository):
     with config_targets() as config_data:
-        return generate_plans(config_data.json, BACKENDS, repository)
+        graph = build_dependency_graph(config_data.json, BACKENDS)
+        plans = convert_graph_to_plans(graph, repository)
+        return plans
 
 
 def help(name):
@@ -86,7 +89,11 @@ def help(name):
 \t{0} packages list
 \t{0} update
 \t{0} autoremove
-\t{0} update autoremove'''.format(name))
+\t{0} update autoremove
+Environment variables:
+ - AUTOPKG_HOME
+ - AUTOPKG_KEY: GPG key to sign packages and the repository.
+ - AUTOPKG_RETRY: The number of retrials in build packages in chroot environment.'''.format(name))
 
 
 def front(name, arguments):
