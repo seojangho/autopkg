@@ -88,7 +88,7 @@ class Version:
         """ :param other: The other version.
         :return: A negative integer if self < other, zero if self == other, a positive integer if self > other.
         """
-        return int(run(['vercmp', self.version, other.version]))
+        return int(run(['vercmp', self.version, other.version], quiet=True))
 
     def __eq__(self, other):
         """ :param other: The other version.

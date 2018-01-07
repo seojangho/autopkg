@@ -21,18 +21,22 @@ workspaces_home = join(autopkg_home, 'workspaces')
 config_home = join(autopkg_home, 'config')
 
 
-def run(command, sudo=False, cwd=None):
+def run(command, sudo=False, cwd=None, capture=True, quiet=False):
     """
     :param command: The command to run.
     :param sudo: Whether to execute the command using sudo(1) or not.
     :param cwd: Working directory.
+    :param capture: Whether to capture stdout and stderr or not.
+    :param quiet: Do not log the command.
     :return: The captured standard output.
     """
     prefix = ['sudo'] if sudo else []
     cmd = prefix + command
-    log(LogLevel.fine, ' '.join(cmd))
+    if not quiet:
+        log(LogLevel.fine, ' '.join(cmd))
+    file = PIPE if capture else None
     try:
-        return subprocess_run(cmd, cwd=cwd, stdout=PIPE, stderr=PIPE, check=True, encoding='utf-8').stdout
+        return subprocess_run(cmd, cwd=cwd, stdout=file, stderr=file, check=True, encoding='utf-8').stdout
     except CalledProcessError as e:
         log(LogLevel.error, e.stderr)
         raise e
