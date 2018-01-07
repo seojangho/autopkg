@@ -69,10 +69,9 @@ class PackageMiniInfo:
 class PackageInfo:
     """ Subset of PKGBUILD. """
 
-    def __init__(self, pkgname, version, arch, pkgbase=None, depends=[], makedepends=[], checkdepends=[]):
+    def __init__(self, pkgname, version, pkgbase=None, depends=[], makedepends=[], checkdepends=[]):
         """ :param pkgname: The name of this package.
         :param version: The version.
-        :param arch: The architecture.
         :param pkgbase: The pkgbase.
         :param depends: List of names of packages this package depends on for running.
         :param makedepends: List of names of packages this package depends on for building.
@@ -80,24 +79,19 @@ class PackageInfo:
         """
         self.pkgname = pkgname
         self.version = Version(version) if type(version) is str else version
-        self.arch = arch
-        self.pkgbase = pkgbase
+        self.pkgbase = pkgbase if pkgbase is not None else pkgname
         self.depends = depends
         self.makedepends = makedepends
         self.checkdepends = checkdepends
-        self.mini_info = PackageMiniInfo(pkgname, version, arch)
+        self.tiny_info = PackageTinyInfo(pkgname, version)
 
     def __str__(self):
         """ :return: Representation of this package reference. """
-        return str(self.mini_info)
+        return str(self.tiny_info)
 
     def __repr__(self):
         """ :return: Formal representation of this package reference. """
-        return repr(self.mini_info)
-
-    def package_file_name(self):
-        """ :return: The name of package file. """
-        return self.mini_info.package_file_name()
+        return repr(self.tiny_info)
 
 
 class Version:

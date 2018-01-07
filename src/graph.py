@@ -118,7 +118,7 @@ def build_dependency_graph(pkgnames, backends):
         unresolved_pkgnames = [unresolved_edge.pkgname for unresolved_edge in unresolved_edges]
         new_vertices = list()
         for buildable in query_by_pkgnames(unresolved_pkgnames, backends):
-            if buildable.package_info.pkgname not in unresolved_pkgname:
+            if buildable.package_info.pkgname not in unresolved_pkgnames:
                 # Since this BuildItem does not contribute to resolving packages, discard it.
                 # Maybe buildable.package_info.pkgname has been resolved by other Buildable ahead.
                 continue

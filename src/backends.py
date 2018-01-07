@@ -3,20 +3,27 @@
 from utils import run
 from utils import url_read
 from gzip import decompress
+from json import loads
+from package import PackageInfo
 
 
 class PkgbaseReference:
+    """ Reference to specific pkgbase from specific backend. """
+
     def __init__(self, pkgbase, backend):
+        """ :param pkgbase: The pkgbase.
+        :param backend: The backend.
+        """
         if pkgbase is None:
             raise Exception('pkgbase=None is not allowed')
         self.pkgbase = pkgbase
         self.backend = backend
 
     def __str__(self):
-        return str(self.pkgbase)
+        return '{}/{}'.format(self.backend, self.pkgbase)
 
     def __repr__(self):
-        return repr(self.pkgbase)
+        return '\'{}\''.format(self)
 
     def __hash__(self):
         return hash(self.pkgbase)
@@ -43,7 +50,21 @@ class AURBuildable:
 
     @property
     def chroot_required(self):
+        """ :return: True. """
         return True
+
+    def __str__(self):
+        return '{}→{}'.format(self.pkgbase_reference, self.package_info)
+
+    def __repr__(self):
+        return '\'{}->{}\''.format(self.pkgbase_reference, self.package_info)
+
+
+def extract_package_names(depends):
+    """ :param depends: List of depends in AUR rpc result.
+    :return: List of names of packages.
+    """
+    return [depend.split('>')[0].split('<')[0].split('=')[0] for depend in depends]
 
 
 def aur_backend(pkgnames):
@@ -56,3 +77,26 @@ def aur_backend(pkgnames):
         fetched = url_read('https://aur.archlinux.org/packages.gz')
         aur_backend.aur_packages = [name for name in decompress(fetched).decode().splitlines()
                                     if len(name) > 0 and name[0] != '#']
+        aur_backend.pkgname_to_buildable = dict()
+    buildables = [aur_backend.pkgname_to_buildable[pkgname] for pkgname in pkgnames
+                  if pkgname in aur_backend.pkgname_to_buildable]
+    query_targets = ['&arg[]=' + pkgname for pkgname in pkgnames if pkgname not in aur_backend.pkgname_to_buildable
+                     and pkgname in aur_backend.aur_packages]
+    if len(query_targets) > 0:
+        json = loads(url_read('https://aur.archlinux.org/rpc/?v=5&type=info' + ''.join(query_targets)).decode())
+        for result in json['results']:
+            buildable = AURBuildable(PackageInfo(result['Name'], result['Version'], pkgbase=result['PackageBase'],
+                                     depends=extract_package_names(result.get('Depends', list())),
+                                     makedepends=extract_package_names(result.get('MakeDepends', list())),
+                                     checkdepends=extract_package_names(result.get('CheckDepends', list()))))
+            aur_backend.pkgname_to_buildable[buildable.package_info.pkgname] = buildable
+            buildables.append(buildable)
+    return buildables
+
+
+def gshellext_backend(pkgnames):
+    return list()
+
+
+def git_backend(pkgnames):
+    return list()

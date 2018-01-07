@@ -23,6 +23,12 @@ class Plan:
         """
         return cls(buildable, list(set(buildable.package_info.makedepends + buildable.package_info.checkdepends)))
 
+    def __str__(self):
+        return '{}→[{}]'.format(self.buildable.pkgbase_reference, ', '.join(self.build))
+
+    def __repr__(self):
+        return '\'{}\''.format(self)
+
     @property
     def chroot(self):
         """ :return: Whether to execute this build in chroot environment or not. """
@@ -43,9 +49,7 @@ class Plan:
         :param pkgname: The name of the package.
         :param repository: The Repository.
         """
-        repository_version = repository.packages[pkgname]
-        pkgbuild_version = self.buildable.package_info.version
-        if repository_version == pkgbuild_version:
+        if pkgname in repository.packages and repository.packages.get[pkgname] == self.buildable.package_info.version:
             self.add_keep(pkgname)
         else:
             self.add_build(pkgname)
