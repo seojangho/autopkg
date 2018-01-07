@@ -108,7 +108,7 @@ def do_build(plans, repository, chroot=None):
                 package_tiny_info = PackageTinyInfo(pkgname, buildable.package_info.version)
                 built_package_file = join(pkgbuild_dir, package_tiny_info.pick_package_file_at(pkgbuild_dir))
                 repository.add(built_package_file)
-                log(LogLevel.good, 'Successfully built {} from {}', pkgname, buildable.pkgbase_reference)
+                log(LogLevel.good, 'Successfully built {} from {}', pkgname, buildable.source_reference)
 
 
 def autoremovable_packages(plans, repository):

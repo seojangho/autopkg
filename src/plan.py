@@ -28,7 +28,7 @@ class Plan:
         return cls(buildable, [pkgname for pkgname in dependencies if pkgname in resolved_dependencies])
 
     def __str__(self):
-        return '{}→[{}]'.format(self.buildable.pkgbase_reference, ', '.join(self.build))
+        return '{}→[{}]'.format(self.buildable.source_reference, ', '.join(self.build))
 
     def __repr__(self):
         return '\'{}\''.format(self)
@@ -69,16 +69,16 @@ def convert_graph_to_plans(graph, repository):
     # Root buildable with 'light' dependencies comes first.
     root_edges = [edge for edge in graph if edge.vertex_to is not None]
     root_edges.sort(key=lambda edge: edge.vertex_to.num_build_time_dependencies)
-    pkgbase_to_plan = dict()
-    lists_of_plans = [do_visit_vertex(edge.vertex_to, repository, [], pkgbase_to_plan) for edge in root_edges]
+    source_to_plan = dict()
+    lists_of_plans = [do_visit_vertex(edge.vertex_to, repository, [], source_to_plan) for edge in root_edges]
     return [plan for plans in lists_of_plans for plan in plans]
 
 
-def do_visit_vertex(vertex, repository, required_by, pkgbase_to_plan):
+def do_visit_vertex(vertex, repository, required_by, source_to_plan):
     """ :param vertex: The DependencyVertex.
     :param repository: The Repository.
     :param required_by: List of names of packages that requires building this package for building and checking.
-    :param pkgbase_to_plan: Dictionary with each entry from pkgbase reference to Plan. Treated as a mutable object.
+    :param source_to_plan: Dictionary with each entry from source reference to Plan. Treated as a mutable object.
     :return: List of Plans to build packages specified by this subtree.
     """
     pkgname = vertex.buildable.package_info.pkgname
@@ -91,23 +91,23 @@ def do_visit_vertex(vertex, repository, required_by, pkgbase_to_plan):
         if edge.vertex_to is None:
             continue
         sub_vertex = edge.vertex_to
-        if sub_vertex.buildable.pkgbase_reference in pkgbase_to_plan:
+        if sub_vertex.buildable.source_reference in source_to_plan:
             # Merge into existing Plan.
-            pkgbase_to_plan[sub_vertex.buildable.pkgbase_reference].add(edge.pkgname, repository)
+            source_to_plan[sub_vertex.buildable.source_reference].add(edge.pkgname, repository)
             continue
         try:
-            plan.extend(do_visit_vertex(sub_vertex, repository, required_by + [pkgname], pkgbase_to_plan))
+            plan.extend(do_visit_vertex(sub_vertex, repository, required_by + [pkgname], source_to_plan))
         except CyclicDependencyError as e:
             e.chain(pkgname)
             raise e
-    pkgbase = vertex.buildable.pkgbase_reference
+    source = vertex.buildable.source_reference
     # Recursive incarnation of 'do_visit_vertex' may have created Plan for this package
     # while resolving cyclic dependency due to runtime dependencies.
     # So we double-check the existence.
-    if pkgbase not in pkgbase_to_plan:
-        pkgbase_to_plan[pkgbase] = Plan.from_buildable(vertex.buildable, plan)
-        plan.append(pkgbase_to_plan[pkgbase])
-    pkgbase_to_plan[pkgbase].add(pkgname, repository)
+    if source not in source_to_plan:
+        source_to_plan[source] = Plan.from_buildable(vertex.buildable, plan)
+        plan.append(source_to_plan[source])
+    source_to_plan[source].add(pkgname, repository)
     return plan
 
 

@@ -9,48 +9,47 @@ from os.path import join
 from urllib.error import HTTPError
 
 
-class PkgbaseReference:
-    """ Reference to specific pkgbase from specific backend. """
+class SourceReference:
+    """ Reference to specific package source from specific backend. """
 
-    def __init__(self, pkgbase, backend):
-        """ :param pkgbase: The pkgbase.
-        :param backend: The backend.
+    def __init__(self, backend, source):
         """
-        if pkgbase is None:
-            raise Exception('pkgbase=None is not allowed')
-        self.pkgbase = pkgbase
+        :param backend: The backend.
+        :param source: The source.
+        """
         self.backend = backend
+        self.source = source
 
     def __str__(self):
-        return '{}/{}'.format(self.backend, self.pkgbase)
+        return '{}/{}'.format(self.backend, self.source)
 
     def __repr__(self):
         return '\'{}\''.format(self)
 
     def __hash__(self):
-        return hash(self.pkgbase)
+        return hash(self.source)
 
     def __eq__(self, other):
-        if not isinstance(other, PkgbaseReference):
+        if not isinstance(other, SourceReference):
             return False
-        return self.pkgbase == other.pkgbase and self.backend == other.backend
+        return self.source == other.source and self.backend == other.backend
 
 
 class AbstractBuildable:
-    def __init__(self, package_info, backend_name):
+    def __init__(self, package_info, source_reference):
         self.package_info = package_info
-        self.pkgbase_reference = PkgbaseReference(self.package_info.pkgbase, backend_name)
+        self.source_reference = source_reference
 
     def __str__(self):
-        return '{}→{}'.format(self.pkgbase_reference, self.package_info)
+        return '{}→{}'.format(self.source_reference, self.package_info)
 
     def __repr__(self):
-        return '\'{}->{}\''.format(self.pkgbase_reference, self.package_info)
+        return '\'{}->{}\''.format(self.source_reference, self.package_info)
 
 
 class AURBuildable(AbstractBuildable):
     def __init__(self, package_info):
-        super().__init__(package_info, 'aur')
+        super().__init__(package_info, SourceReference('aur', package_info.pkgbase))
 
     def write_pkgbuild_to(self, path):
         """ :param path: Path to workspace.
@@ -130,7 +129,7 @@ package() {{
 
 class GShellExtBuildable(AbstractBuildable):
     def __init__(self, package_info, uuid, version, version_tag, description, link):
-        super().__init__(package_info, 'gshellext')
+        super().__init__(package_info, SourceReference('gshellext', uuid))
         self.uuid = uuid
         self.version = version
         self.version_tag = version_tag

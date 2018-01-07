@@ -116,7 +116,7 @@ def log_graph(edge, repository, depth):
         return
     buildable = vertex.buildable
     package_info = buildable.package_info
-    pkgbase_reference = buildable.pkgbase_reference
+    source_reference = buildable.source_reference
     pkgname = package_info.pkgname
     if pkgname in repository.packages:
         old = repository.packages[pkgname].version
@@ -124,8 +124,8 @@ def log_graph(edge, repository, depth):
         old = None
     new = package_info.version
     transition_color_code = ''.join(['\033[{}m'.format(code) for code in TRANSITION_TO_COLOR[transition(old, new)]])
-    log_string = ' {}+ {} {}({}→{})\033[0m [{}] [{}]'.format(' ' * (depth * 2), pkgname, transition_color_code, old, new,
-                                                            pkgbase_reference, edge.dependency_type.name)
+    log_string = ' {}+ {} {}({}→{})\033[0m [{}] [{}]'.format(' ' * (depth * 2), pkgname, transition_color_code, old,
+                                                             new, source_reference, edge.dependency_type.name)
     log(LogLevel.info, log_string)
     for edge in vertex.edges:
         log_graph(edge, repository, depth + 1)
@@ -151,7 +151,7 @@ def transition(old, new):
 def log_plans(plans):
     for plan in plans:
         buildable = plan.buildable
-        log(LogLevel.info, ' - {}', buildable.pkgbase_reference)
+        log(LogLevel.info, ' - {}', buildable.source_reference)
         for pkgname in plan.requisites:
             log(LogLevel.info, '       \033[2mWith {}\033[0m', pkgname)
         for pkgname in plan.build:
