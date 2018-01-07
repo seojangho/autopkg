@@ -4,11 +4,15 @@ from contextlib import contextmanager
 from utils import workspace
 from utils import run
 from utils import mkdir
+from utils import num_retrials
+from utils import log
+from utils import LogLevel
 from os.path import join
 from os.path import isdir
 from repository import Repository
 from graph import build_dependency_graph
 from plan import convert_graph_to_plans
+from subprocess import CalledProcessError
 
 
 @contextmanager
@@ -51,7 +55,15 @@ class ArchRoot:
         """ Build packages in chroot environment.
         :param pkgbuild_dir: The path to the directory where PKGBUILD resides.
         """
-        run(['makechrootpkg', '-c', '-u', '-l', 'working', '-r', self.path], cwd=pkgbuild_dir, capture=False)
+        for i in range(num_retrials):
+            try:
+                run(['makechrootpkg', '-c', '-u', '-l', 'working', '-r', self.path], cwd=pkgbuild_dir, capture=False)
+                return
+            except CalledProcessError:
+                pass
+        message = 'Failed to build {} at {} trial(s)'.format(pkgbuild_dir, num_retrials)
+        log(LogLevel.error, message)
+        raise Exception(message)
 
 
 def build(pkgbuild_dir):
