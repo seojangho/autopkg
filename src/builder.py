@@ -4,14 +4,9 @@ from contextlib import contextmanager
 from utils import workspace
 from utils import run
 from utils import mkdir
-from utils import repository_home
-from utils import sign_key
 from os.path import join
 from os.path import isdir
 from repository import Repository
-from backends import git_backend
-from backends import gshellext_backend
-from backends import aur_backend
 from graph import build_dependency_graph
 from plan import convert_graph_to_plans
 
@@ -50,8 +45,7 @@ class ArchRoot:
         """ :param ws: Pato for the chroot. """
         self.path = path
         repository_path = join(path, 'root', 'repo')
-        mkdir(repository_path, sudo=True)
-        self.repository = Repository('autopkg', repository_path, sudo=True)
+        self.repository = Repository('autopkg', mkdir(repository_path, sudo=True), sudo=True)
 
     def build(self, pkgbuild_dir):
         """ Build packages in chroot environment.
@@ -67,20 +61,13 @@ def build(pkgbuild_dir):
     run(['makepkg'], cwd=pkgbuild_dir, capture=False)
 
 
-BACKENDS = [git_backend, gshellext_backend, aur_backend]
-
-
-def main_repository():
-    """ :return: Main repository. """
-    return Repository('autopkg', repository_home, sign_key=sign_key, sudo=False)
-
-
-def generate_plans(pkgnames):
+def generate_plans(pkgnames, backends, repository):
     """ :param pkgnames: The list of names of packages.
+    :param backends: The list of backends to use.
+    :param repository: The main repository.
     :return: Plan to build those packages.
     """
-    repository = main_repository()
-    graph = build_dependency_graph(pkgnames, BACKENDS)
+    graph = build_dependency_graph(pkgnames, backends)
     plans = convert_graph_to_plans(graph, repository)
     return plans
 
@@ -95,11 +82,11 @@ def execute_plans_build(plans):
         do_build(plans)
 
 
-def do_build(plans, chroot=None):
+def do_build(plans, repository, chroot=None):
     """ :param plans: Plans to execute.
+    :param repository: The main repository.
     :param chroot: Chroot environment.
     """
-    repository = main_repository()
     for plan in plans:
         if len(plan.build) == 0:
             continue
@@ -117,12 +104,12 @@ def do_build(plans, chroot=None):
             repository.add(built_package_file)
 
 
-def execute_plans_autoremove(plans):
+def execute_plans_autoremove(plans, repository):
     """ :param plans: Plans to execute.
+    :param repository: The main repository.
     :return: The names of packages auto-removed.
     """
     needed = [pkgname for plan in plans for pkgname in plan.build + plan.keep]
-    repository = main_repository()
     to_remove = list()
     for pkgname in repository.packages.keys():
         if pkgname not in needed:

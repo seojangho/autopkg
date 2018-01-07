@@ -74,7 +74,7 @@ def mkdir(path, sudo=False):
     :param sudo: Whether to execute using sudo(1) or not.
     :return: The path to the leaf directory.
     """
-    run(['mkdir', '-p', path], sudo=sudo)
+    run(['mkdir', '-p', path], sudo=sudo, quiet=True)
     return path
 
 
@@ -114,11 +114,28 @@ def config(name):
                 json = loads(file.read())
             except JSONDecodeError:
                 json = None
-            yield json
-            if json is not None:
+            config_data = ConfigData(json)
+            yield config_data
+            if config_data.json is not None:
                 file.truncate(0)
                 file.seek(0)
-                file.write(dumps(json))
+                file.write(dumps(config_data.json))
+
+
+class ConfigData:
+    """ Config data. """
+
+    def __init__(self, json):
+        """ :param json: Initial json data. """
+        self._json = json
+
+    @property
+    def json(self):
+        return self._json
+
+    @json.setter
+    def json(self, value):
+        self._json = value
 
 
 class LogLevel(Enum):
@@ -166,7 +183,7 @@ def log(log_level, content, *args):
     try:
         log.file
     except AttributeError:
-        log.file = open(join(autopkg_home, 'log'), mode='a+t')
+        log.file = open(join(mkdir(autopkg_home), 'log'), mode='a+t')
     text = str(content).format(*args)
     log.file.write('{}:{}\t{}\n'.format(strftime('%Y-%m-%dT%H:%M:%S%z'), log_level.name, remove_color(text)))
     log.file.flush()

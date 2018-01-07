@@ -1,0 +1,8 @@
+#!/usr/bin/python3
+
+from front import front
+from sys import argv
+
+
+if __name__ == '__main__':
+    front(argv[1:])
