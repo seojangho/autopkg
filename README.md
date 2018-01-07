@@ -10,3 +10,4 @@
 * `sudo`
 * `gnupg`
 * `git`
+* `bash`

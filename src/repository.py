@@ -25,7 +25,7 @@ class Repository:
 
         self.db_path = join(path, name + '.db.tar.gz')
         if not exists(self.db_path):
-            run(['repo-add', self.db_path], sudo=sudo)
+            run(['repo-add', self.db_path], sudo=sudo, capture=False)
 
         packages = [PackageTinyInfo.from_repodb_directory_name(member.name) for member
                     in tarfile_open(self.db_path).getmembers() if member.isdir()]
@@ -42,8 +42,9 @@ class Repository:
         repository_package_path = join(self.directory, basename(package_file_path))
         if self.sign_key:
             run(['gpg', '--detach-sign', '--no-armor', '--default-key', self.sign_key, repository_package_path],
-                sudo=self.sudo)
-        run(['repo-add', '-R'] + self.sign_parameters + [self.db_path, repository_package_path], sudo=self.sudo)
+                sudo=self.sudo, capture=False)
+        run(['repo-add', '-R'] + self.sign_parameters + [self.db_path, repository_package_path],
+            sudo=self.sudo, capture=False)
         self.packages[package.name] = package
 
     # TODO remove...

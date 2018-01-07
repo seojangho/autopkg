@@ -16,21 +16,26 @@ from enum import Enum
 from fcntl import flock
 from fcntl import LOCK_EX
 from fcntl import LOCK_UN
+from re import sub
+from time import strftime
 
 
 home = str(Path.home())
 autopkg_home = environ.get('AUTOPKG_HOME', join(home, '.autopkg'))
 workspaces_home = join(autopkg_home, 'workspaces')
 config_home = join(autopkg_home, 'config')
+sign_key = environ.get('AUTOPKG_KEY', None)
+num_retrials = int(environ.get('AUTOPKG_RETRY', 3))
 
 
-def run(command, sudo=False, cwd=None, capture=True, quiet=False):
+def run(command, sudo=False, cwd=None, capture=True, quiet=False, stdin=None):
     """
     :param command: The command to run.
     :param sudo: Whether to execute the command using sudo(1) or not.
     :param cwd: Working directory.
     :param capture: Whether to capture stdout and stderr or not.
     :param quiet: Do not log the command.
+    :param stdin: Input string.
     :return: The captured standard output.
     """
     prefix = ['sudo'] if sudo else []
@@ -39,9 +44,14 @@ def run(command, sudo=False, cwd=None, capture=True, quiet=False):
         log(LogLevel.fine, ' '.join(cmd))
     file = PIPE if capture else None
     try:
-        return subprocess_run(cmd, cwd=cwd, stdout=file, stderr=file, check=True, encoding='utf-8').stdout
+        completed = subprocess_run(cmd, cwd=cwd, stdout=file, stderr=file, check=True, encoding='utf-8', input=stdin)
+        if capture:
+            return completed.stdout
+        else:
+            return None
     except CalledProcessError as e:
-        log(LogLevel.error, e.stderr)
+        if capture:
+            log(LogLevel.error, e.stderr)
         raise e
 
 
@@ -138,14 +148,26 @@ def color(text, codes):
     return '{}{}\033[0m'.format(''.join(['\033[{}m'.format(code) for code in codes]), text)
 
 
+def remove_color(text):
+    """ :param text: The text.
+    :return: Text without color tags.
+    """
+    return sub('\033\[[0-9]+m', '', text)
+
+
 def log(log_level, content, *args):
     """ Emit log entry.
     :param log_level: The LogLevel.
     :param content: The log content.
     :param args: Arguments for the format string.
     """
+    try:
+        log.file
+    except AttributeError:
+        log.file = open(join(autopkg_home, 'log'), mode='a+t')
     text = str(content).format(*args)
-    # TODO: Write to log file
+    log.file.write('{}:{}\t{}\n'.format(strftime('%Y-%m-%dT%H:%M:%S%z'), log_level.name, remove_color(text)))
+    log.file.flush()
     codes = LOG_LEVEL_TO_COLOR[log_level]
     if codes is None:
         return

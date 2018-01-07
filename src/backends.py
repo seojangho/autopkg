@@ -57,7 +57,7 @@ class AURBuildable(AbstractBuildable):
         :return: Path to the leaf directory where PKGBUILD resides.
         """
         giturl = 'https://aur.archlinux.org/{}.git'.format(self.package_info.pkgbase)
-        run(['git', 'clone', giturl, path])
+        run(['git', 'clone', giturl, path], capture=False)
         return path
 
     @property
