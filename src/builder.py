@@ -116,6 +116,8 @@ def do_build(plans, repository, chroot=None):
                 build(pkgbuild_dir)
             built_package_file = join(pkgbuild_dir, buildable.package_info.pick_package_file_at(pkgbuild_dir))
             repository.add(built_package_file)
+        log(LogLevel.good, 'Successfully built {} from {}', plan.buildable.package_info,
+            plan.buildable.pkgbase_reference)
 
 
 def execute_plans_autoremove(plans, repository):
@@ -130,4 +132,5 @@ def execute_plans_autoremove(plans, repository):
             to_remove.append(pkgname)
     for pkgname in to_remove:
         repository.remove(pkgname)
+        log(LogLevel.good, 'Removed {}', pkgname)
     return to_remove
