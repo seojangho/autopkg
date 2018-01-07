@@ -108,7 +108,7 @@ def config(name):
     """ :param name: Name of the configuration file.
     :return: Context manager for the configuration file.
     """
-    with open(join(mkdir(config_home), name + '.json'), mode='a+t') as file:
+    with open(join(mkdir(config_home), name + '.json'), mode='r+t') as file:
         with advisory_lock(file):
             try:
                 json = loads(file.read())
