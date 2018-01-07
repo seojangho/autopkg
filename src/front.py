@@ -81,10 +81,11 @@ def do_plans(repository):
     with config_targets() as config_data:
         log(LogLevel.header, 'Querying Backends...')
         graph = build_dependency_graph(config_data.json, BACKENDS)
-        log(LogLevel.header, 'Dependency Graph:')
+        plans = convert_graph_to_plans(graph, repository)
+        # Now we can assure that the graph is acyclic (a 'tree')
+        log(LogLevel.header, 'Dependency Tree:')
         for root_edge in graph:
             log_graph(root_edge, repository, 0)
-        plans = convert_graph_to_plans(graph, repository)
         log(LogLevel.header, 'Plan:')
         log_plans(plans)
         to_remove = autoremovable_packages(plans, repository)
