@@ -186,5 +186,8 @@ def gshellext_backend(pkgnames):
     return buildables
 
 
+GIT_CONFIG_NAME = 'git'
+
+
 def git_backend(pkgnames):
     return list()
