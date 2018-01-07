@@ -40,6 +40,8 @@ def do_targets(arguments):
         if cmdlet == 'add':
             config_data.json = list(set(config_data.json + targets))
         elif cmdlet == 'remove':
+            for pkgname in [pkgname for pkgname in targets if pkgname not in config_data.json]:
+                log(LogLevel.warn, 'Not in targets list: {}', pkgname)
             config_data.json = [pkgname for pkgname in config_data.json if pkgname not in targets]
         elif cmdlet == 'list':
             log(LogLevel.header, 'List of Targets:')
@@ -49,11 +51,36 @@ def do_targets(arguments):
             unknown_command(cmdlet)
 
 
-def do_packages(arguments):
-    pass
+def do_packages(arguments, repository):
+    if len(arguments) == 0:
+        return
+    cmdlet = arguments[0]
+    targets = arguments[1:]
+    if cmdlet == 'add':
+        for target in targets:
+            repository.add(target)
+    elif cmdlet == 'remove':
+        for target in targets:
+            repository.remove(target)
+    elif cmdlet == 'list':
+        log(LogLevel.header, 'List of Packages in the Repository:')
+        for package_tiny_info in repository.packages.values():
+            log(LogLevel.info, ' - {}', package_tiny_info)
 
 
-def front(arguments):
+def help(name):
+    print('''Usage:\t{0} targets add [target-package-name-to-add]*
+\t{0} targets remove [target-package-name-to-remove]*
+\t{0} targets list
+\t{0} packages add [path-to-the-package-file-to-add]*
+\t{0} packages remove [package-name-to-remove]*
+\t{0} packages list
+\t{0} update
+\t{0} autoremove
+\t{0} update autoremove'''.format(name))
+
+
+def front(name, arguments):
     with run_lock():
         log(LogLevel.debug, 'arguments: {}', arguments)
         log(LogLevel.debug, 'AUTOPKG_HOME: {}', environ.get('AUTOPKG_HOME', None))
@@ -66,17 +93,15 @@ def front(arguments):
                 do_targets(arguments[index + 1:])
                 break
             elif cmdlet == 'packages':
-                do_packages(arguments[index + 1:])
+                do_packages(arguments[index + 1:], repository)
                 break
             elif cmdlet == 'update':
                 pass
             elif cmdlet == 'autoremove':
                 pass
             else:
-                unknown_command(cmdlet)
+                help(name)
+                if cmdlet != '--help':
+                    unknown_command(cmdlet)
                 break
         log(LogLevel.debug, 'Exiting...')
-
-
-if __name__ == '__main__':
-    front(argv)

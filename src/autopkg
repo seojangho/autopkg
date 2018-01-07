@@ -5,4 +5,4 @@ from sys import argv
 
 
 if __name__ == '__main__':
-    front(argv[1:])
+    front(argv[0], argv[1:])

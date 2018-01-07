@@ -143,7 +143,7 @@ class LogLevel(Enum):
     """ Log levels. """
 
     error = 0
-    warning = 1
+    warn = 1
     info = 2
     header = 3
     good = 4
@@ -152,7 +152,7 @@ class LogLevel(Enum):
 
 
 LOG_LEVEL_TO_COLOR = {LogLevel.error: [31],
-                      LogLevel.warning: [33],
+                      LogLevel.warn: [33],
                       LogLevel.info: [],
                       LogLevel.header: [1, 4],
                       LogLevel.good: [32],
