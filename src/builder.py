@@ -78,6 +78,7 @@ def execute_plans_update(plans, repository):
     """
     if sum(1 for plan in plans if plan.chroot and len(plan.build) > 0) > 0:
         # Chroot required.
+        log(LogLevel.header, 'Preparing Arch-chroot Environment...')
         with arch_root() as chroot:
             do_build(plans, repository, chroot)
     else:
@@ -89,6 +90,7 @@ def do_build(plans, repository, chroot=None):
     :param repository: The main repository.
     :param chroot: Chroot environment.
     """
+    log(LogLevel.header, 'Update...')
     for plan in plans:
         if len(plan.build) == 0:
             continue
@@ -127,7 +129,10 @@ def execute_plans_autoremove(plans, repository):
     :param repository: The main repository.
     :return: The names of packages auto-removed.
     """
+    log(LogLevel.header, 'Auto-remove...')
     to_remove = autoremovable_packages(plans, repository)
+    if len(to_remove) == 0:
+        log(LogLevel.info, 'Nothing to do.')
     for pkgname in to_remove:
         repository.remove(pkgname)
         log(LogLevel.good, 'Removed {}', pkgname)
