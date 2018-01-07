@@ -115,4 +115,6 @@ def front(name, arguments):
                 if cmdlet != '--help':
                     unknown_command(cmdlet)
                 break
+        if len(arguments) == 0:
+            help(name)
         log(LogLevel.debug, 'Exiting...')

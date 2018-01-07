@@ -49,7 +49,7 @@ class DependencyVertex:
     @property
     def num_build_time_dependencies(self):
         """ :return: The number of build-time dependencies. """
-        return sum(1 for edge in self.edges if edge.is_build_time_dependency)
+        return len(self.edges)
 
 
 class DependencyEdge:
@@ -82,11 +82,6 @@ class DependencyEdge:
             raise Exception("Re-assigning vertex is not allowed.")
         self.vertex_to = vertex_to
         self.is_resolved = True
-
-    @property
-    def is_build_time_dependency(self):
-        """ :return: True if and only if this dependency relationship is build-time dependency. """
-        return self.dependency_type != DependencyType.run
 
 
 class CaseInsensitiveStringList:

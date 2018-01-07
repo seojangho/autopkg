@@ -17,11 +17,15 @@ class Plan:
         self.keep = []
 
     @classmethod
-    def from_buildable(cls, buildable):
+    def from_buildable(cls, buildable, plans):
         """ :param buildable: The Buildable from backend.
+        :param plans: The plans to be executed ahead of this plan.
         :return: Plan to build this Buildable.
         """
-        return cls(buildable, list(set(buildable.package_info.makedepends + buildable.package_info.checkdepends)))
+        package_info = buildable.package_info
+        dependencies = list(set(package_info.depends + package_info.makedepends + package_info.checkdepends))
+        resolved_dependencies = [plan.buildable.package_info.pkgname for plan in plans]
+        return cls(buildable, [pkgname for pkgname in dependencies if pkgname in resolved_dependencies])
 
     def __str__(self):
         return '{}→[{}]'.format(self.buildable.pkgbase_reference, ', '.join(self.build))
@@ -58,7 +62,7 @@ class Plan:
 def convert_graph_to_plans(graph, repository):
     """ :param graph: List of DependencyEdges from the root vertex of the package dependency graph.
     :param repository: The current repository.
-    :return: List of BuildPlans to execute in order.
+    :return: List of Plans to execute in order.
     """
     for not_found in [edge.pkgname for edge in graph if edge.vertex_to is None]:
         log(LogLevel.error, "Not found: {}", not_found)
@@ -75,7 +79,7 @@ def do_visit_vertex(vertex, repository, required_by, pkgbase_to_plan):
     :param repository: The Repository.
     :param required_by: List of names of packages that requires building this package for building and checking.
     :param pkgbase_to_plan: Dictionary with each entry from pkgbase reference to Plan. Treated as a mutable object.
-    :return: List of BuildPlans to build packages specified by this subtree.
+    :return: List of Plans to build packages specified by this subtree.
     """
     pkgname = vertex.buildable.package_info.pkgname
     if pkgname in required_by:
@@ -91,10 +95,8 @@ def do_visit_vertex(vertex, repository, required_by, pkgbase_to_plan):
             # Merge into existing Plan.
             pkgbase_to_plan[sub_vertex.buildable.pkgbase_reference].add(edge.pkgname, repository)
             continue
-        # Allow cyclic dependency for runtime dependency.
-        sub_required_by = required_by + [pkgname] if edge.is_build_time_dependency else required_by
         try:
-            plan.extend(do_visit_vertex(sub_vertex, repository, sub_required_by, pkgbase_to_plan))
+            plan.extend(do_visit_vertex(sub_vertex, repository, required_by + [pkgname], pkgbase_to_plan))
         except CyclicDependencyError as e:
             e.chain(pkgname)
             raise e
@@ -103,7 +105,7 @@ def do_visit_vertex(vertex, repository, required_by, pkgbase_to_plan):
     # while resolving cyclic dependency due to runtime dependencies.
     # So we double-check the existence.
     if pkgbase not in pkgbase_to_plan:
-        pkgbase_to_plan[pkgbase] = Plan.from_buildable(vertex.buildable)
+        pkgbase_to_plan[pkgbase] = Plan.from_buildable(vertex.buildable, plan)
         plan.append(pkgbase_to_plan[pkgbase])
     pkgbase_to_plan[pkgbase].add(pkgname, repository)
     return plan
