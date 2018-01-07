@@ -11,6 +11,7 @@ from os.path import join
 from os.path import isdir
 from repository import Repository
 from subprocess import CalledProcessError
+from package import PackageTinyInfo
 
 
 @contextmanager
@@ -101,10 +102,11 @@ def do_build(plans, repository, chroot=None):
                 chroot.build(pkgbuild_dir)
             else:
                 build(pkgbuild_dir)
-            built_package_file = join(pkgbuild_dir, buildable.package_info.pick_package_file_at(pkgbuild_dir))
-            repository.add(built_package_file)
-        log(LogLevel.good, 'Successfully built {} from {}', plan.buildable.package_info,
-            plan.buildable.pkgbase_reference)
+            for pkgname in plan.build:
+                package_tiny_info = PackageTinyInfo(pkgname, buildable.package_info.version)
+                built_package_file = join(pkgbuild_dir, package_tiny_info.pick_package_file_at(pkgbuild_dir))
+                repository.add(built_package_file)
+                log(LogLevel.good, 'Successfully built {} from {}', pkgname, buildable.pkgbase_reference)
 
 
 def execute_plans_autoremove(plans, repository):

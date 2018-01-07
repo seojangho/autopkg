@@ -17,6 +17,7 @@ from graph import build_dependency_graph
 from plan import convert_graph_to_plans
 from builder import execute_plans_update
 from builder import execute_plans_autoremove
+from enum import Enum
 
 
 BACKENDS = [git_backend, gshellext_backend, aur_backend]
@@ -76,8 +77,64 @@ def do_packages(arguments, repository):
 def do_plans(repository):
     with config_targets() as config_data:
         graph = build_dependency_graph(config_data.json, BACKENDS)
+        log(LogLevel.header, 'Dependency Graph:')
+        for root_edge in graph:
+            log_graph(root_edge, repository, 0)
         plans = convert_graph_to_plans(graph, repository)
         return plans
+
+
+class Transition(Enum):
+    keep = 0
+    new = 1
+    upgrade = 2
+    downgrade = 3
+    remove = 4
+
+
+TRANSITION_TO_COLOR = {Transition.keep: [],
+                       Transition.new: [34],
+                       Transition.upgrade: [32],
+                       Transition.downgrade: [33],
+                       Transition.remove: [31]}
+
+
+def log_graph(edge, repository, depth):
+    vertex = edge.vertex_to
+    if vertex is None:
+        return
+    buildable = vertex.buildable
+    package_info = buildable.package_info
+    pkgbase_reference = buildable.pkgbase_reference
+    pkgname = package_info.pkgname
+    if pkgname in repository.packages:
+        old = repository.packages[pkgname].version
+    else:
+        old = None
+    new = package_info.version
+    transition_color_code = ''.join(['\033[{}m'.format(code) for code in TRANSITION_TO_COLOR[transition(old, new)]])
+    log_string = '{}+ {} {}({}→{})\033[0m [{}] [{}]'.format(' ' * (depth * 2), pkgname, transition_color_code, old, new,
+                                                            pkgbase_reference, edge.dependency_type.name)
+    log(LogLevel.info, log_string)
+    for edge in vertex.edges:
+        log_graph(edge, repository, depth + 1)
+
+
+def transition(old, new):
+    if old is None:
+        if new is None:
+            return Transition.keep
+        else:
+            return Transition.new
+    else:
+        if new is None:
+            return Transition.remove
+    if old < new:
+        return Transition.upgrade
+    elif old > new:
+        return Transition.downgrade
+    else:
+        return Transition.keep
 
 
 def help(name):
