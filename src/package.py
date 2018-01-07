@@ -23,27 +23,6 @@ class PackageTinyInfo:
         split = directory_name.split('-')
         return cls('-'.join(split[:-2]), '-'.join(split[-2:]))
 
-    def __str__(self):
-        """ :return: Representation of this package reference. """
-        return '{}({})'.format(self.name, self.version)
-
-    def __repr__(self):
-        """ :return: Formal representation of this package reference. """
-        return '\'' + self.__str__() + '\''
-
-
-class PackageMiniInfo:
-    """ Same as PackageTinyInfo, but it has 'arch' attribute. """
-
-    def __init__(self, name, version, arch):
-        """ :param name: The pkgname of this package.
-        :param version: The package version.
-        :param arch: The target architecture of this package.
-        """
-        self.name = name
-        self.version = Version(version) if type(version) is str else version
-        self.arch = arch
-
     @classmethod
     def from_package_file_path(cls, path):
         """ Obtains package reference from the path to a package file.
@@ -51,19 +30,15 @@ class PackageMiniInfo:
         :return: The package reference.
         """
         split = basename(path).split('-')
-        return cls('-'.join(split[:-3]), '-'.join(split[-3:-1]), split[-1].split('.')[0])
+        return cls('-'.join(split[:-3]), '-'.join(split[-3:-1]))
 
     def __str__(self):
         """ :return: Representation of this package reference. """
-        return '{}({}, {})'.format(self.name, self.version, self.arch)
+        return '{}({})'.format(self.name, self.version)
 
     def __repr__(self):
         """ :return: Formal representation of this package reference. """
         return '\'' + self.__str__() + '\''
-
-    def package_file_name(self):
-        """ :return: The name of package file. """
-        return '{}-{}-{}.pkg.tar.xz'.format(self.name, self.version, self.arch)
 
 
 class PackageInfo:
