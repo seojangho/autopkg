@@ -123,12 +123,21 @@ def log_graph(edge, repository, depth):
     else:
         old = None
     new = package_info.version
-    transition_color_code = ''.join(['\033[{}m'.format(code) for code in TRANSITION_TO_COLOR[transition(old, new)]])
-    log_string = ' {}+ {} {}({}→{})\033[0m [{}] [{}]'.format(' ' * (depth * 2), pkgname, transition_color_code, old,
-                                                             new, source_reference, edge.dependency_type.name)
+    log_string = ' {}+ {} {} [{}] [{}]'.format(' ' * (depth * 2), pkgname, transition_string(old, new),
+                                               source_reference, edge.dependency_type.name)
     log(LogLevel.info, log_string)
     for edge in vertex.edges:
         log_graph(edge, repository, depth + 1)
+
+
+def transition_string(old, new):
+    transition_color_code = ''.join(['\033[{}m'.format(code) for code in TRANSITION_TO_COLOR[transition(old, new)]])
+    old_symbol = '✗' if old is None else old
+    new_symbol = '✗' if new is None else new
+    if type(old_symbol) == type(new_symbol) and old_symbol == new_symbol:
+        return '{}({})\033[0m'.format(transition_color_code, new_symbol)
+    else:
+        return '{}({}→{})\033[0m'.format(transition_color_code, old_symbol, new_symbol)
 
 
 def transition(old, new):

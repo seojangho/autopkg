@@ -90,7 +90,7 @@ def do_build(plans, repository, chroot=None):
     :param repository: The main repository.
     :param chroot: Chroot environment.
     """
-    log(LogLevel.header, 'Update...')
+    log(LogLevel.header, 'Build...')
     for plan in plans:
         if len(plan.build) == 0:
             continue
