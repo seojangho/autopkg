@@ -15,6 +15,7 @@ from os.path import split
 from os.path import basename
 from urllib.error import HTTPError
 from contextlib import AbstractContextManager
+from contextlib import contextmanager
 
 
 class SourceReference:
@@ -193,7 +194,12 @@ def gshellext_backend(pkgnames):
     return buildables
 
 
-GIT_CONFIG_NAME = 'git'
+@contextmanager
+def config_git_backend():
+    with config('git') as config_data:
+        if config_data.json is None:
+            config_data.json = []
+        yield config_data
 
 
 def git_backend(pkgnames):
@@ -201,15 +207,16 @@ def git_backend(pkgnames):
         git_backend.pkgname_to_buildable
     except AttributeError:
         git_backend.pkgname_to_buildable = do_git()
-    return [git_backend.pkgname_to_buildable[pkgname] for pkgname in pkgnames]
+    return [git_backend.pkgname_to_buildable[pkgname] for pkgname in pkgnames
+            if pkgname in git_backend.pkgname_to_buildable]
 
 
 def do_git():
-    with config(GIT_CONFIG_NAME) as config_data:
+    with config_git_backend() as config_data:
         with Workspaces() as wss:
             repo_url_to_workspace = dict()
             pkgname_to_buildable = dict()
-            for source in config_data:
+            for source in config_data.json:
                 repo_url = source['repository']
                 repo_path = source.get('path', '/')
                 branch = source.get('branch', 'master')
