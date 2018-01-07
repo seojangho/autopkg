@@ -32,8 +32,8 @@ def chroot_cleanup(path):
     :param path: Path to the chroot.
     """
     if run(['stat', '-f', '-c', '%T', path], quiet=True).strip() == 'btrfs':
-        run(['btrfs', 'subvolume', 'delete', join(path, 'var', 'lib', 'machines')], sudo=True)
-        run(['btrfs', 'subvolume', 'delete', path], sudo=True)
+        run(['btrfs', 'subvolume', 'delete', join(path, 'var', 'lib', 'machines')], sudo=True, allow_error=True)
+        run(['btrfs', 'subvolume', 'delete', path], sudo=True, allow_error=True)
     else:
         run(['rm', '-rf', path], sudo=True)
 

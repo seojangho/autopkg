@@ -30,7 +30,7 @@ sign_key = environ.get('AUTOPKG_KEY', None)
 num_retrials = int(environ.get('AUTOPKG_RETRY', 3))
 
 
-def run(command, sudo=False, cwd=None, capture=True, quiet=False, stdin=None):
+def run(command, sudo=False, cwd=None, capture=True, quiet=False, stdin=None, allow_error=False):
     """
     :param command: The command to run.
     :param sudo: Whether to execute the command using sudo(1) or not.
@@ -38,6 +38,7 @@ def run(command, sudo=False, cwd=None, capture=True, quiet=False, stdin=None):
     :param capture: Whether to capture stdout and stderr or not.
     :param quiet: Do not log the command.
     :param stdin: Input string.
+    :param allow_error: Whether to allow error or not.
     :return: The captured standard output.
     """
     prefix = ['sudo'] if sudo else []
@@ -52,6 +53,8 @@ def run(command, sudo=False, cwd=None, capture=True, quiet=False, stdin=None):
         else:
             return None
     except CalledProcessError as e:
+        if allow_error:
+            return None
         if capture:
             log(LogLevel.error, e.stderr)
         raise e
