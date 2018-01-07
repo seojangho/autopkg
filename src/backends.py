@@ -37,14 +37,13 @@ class PkgbaseReference:
 class AURBuildable:
     def __init__(self, package_info):
         self.package_info = package_info
-        self.pkgbase = package_info.pkgbase if package_info.pkgbase is not None else package_info.pkgname
-        self.pkgbase_reference = PkgbaseReference(self.pkgbase, 'aur')
+        self.pkgbase_reference = PkgbaseReference(self.package_info.pkgbase, 'aur')
 
     def write_pkgbuild_to(self, path):
         """ :param path: Path to workspace.
         :return: Path to the leaf directory where PKGBUILD resides.
         """
-        giturl = 'https://aur.archlinux.org/{}.git'.format(self.pkgbase)
+        giturl = 'https://aur.archlinux.org/{}.git'.format(self.package_info.pkgbase)
         run(['git', 'clone', giturl, path])
         return path
 
@@ -95,10 +94,74 @@ def aur_backend(pkgnames):
 
 
 GSHELLEXT_PREFIX = 'gnome-shell-extension-'
+GSHELLEXT_PKGBUILD_FORMAT = """
+pkgname='{}'
+pkgver={}
+pkgrel=1
+pkgdesc='{}'
+arch=('any')
+url='{}'
+license=('custom')
+depends=('gnome-shell')
+source=('{}')
+sha256sums=('SKIP')
+
+package() {{
+  extension_uuid='{}'
+  symlink_name='{}'
+  rm -f "$symlink_name"
+  install -d "${{pkgdir}}/usr/share/gnome-shell/extensions/${{extension_uuid}}"
+  [[ -d schemas ]] && find schemas -name '*.xml' -exec install -Dm644 -t "$pkgdir/usr/share/glib-2.0/schemas/" '{{}}' +
+  [[ -d locale ]] && cp -af locale "${{pkgdir}}/usr/share/locale/"
+  cp -af * "${{pkgdir}}/usr/share/gnome-shell/extensions/${{extension_uuid}}"
+  find "$pkgdir" -type d -exec chmod 755 {{}} \;
+  find "$pkgdir" -type f -exec chmod 644 {{}} \;
+}}
+"""
+
+
+class GShellExtBuildable:
+    def __init__(self, package_info):
+        self.package_info = package_info
+        self.pkgbase_reference = PkgbaseReference(self.pkgbase, 'gshellext')
+
+    def write_pkgbuild_to(self, path):
+        """ :param path: Path to workspace.
+        :return: Path to the leaf directory where PKGBUILD resides.
+        """
+        giturl = 'https://aur.archlinux.org/{}.git'.format(self.pkgbase)
+        run(['git', 'clone', giturl, path])
+        return path
+
+    @property
+    def chroot_required(self):
+        """ :return: True. """
+        return True
+
+    def __str__(self):
+        return '{}→{}'.format(self.pkgbase_reference, self.package_info)
+
+    def __repr__(self):
+        return '\'{}->{}\''.format(self.pkgbase_reference, self.package_info)
 
 
 def gshellext_backend(pkgnames):
-    return list()
+    """ :param pkgnames: The names of the packages to lookup.
+    :return: List of related AURBuildables.
+    """
+    try:
+        gshellext_backend.uuid_to_buildable
+    except AttributeError:
+        gshellext_backend.uuid_to_buildable = dict()
+    buildables = list()
+    for pkgname in pkgnames:
+        if not pkgname.startswith(GSHELLEXT_PREFIX):
+            continue
+        uuid = pkgname[len(GSHELLEXT_PREFIX):]
+        if uuid in gshellext_backend.uuid_to_buildable:
+            buildables.append(gshellext_backend.uuid_to_buildable[uuid])
+            continue
+    return buildables
 
 
 def git_backend(pkgnames):
