@@ -218,7 +218,7 @@ def do_git():
             pkgname_to_buildable = dict()
             for source in config_data.json:
                 repo_url = source['repository']
-                repo_path = source.get('path', '/')
+                repo_path = source.get('path', '')
                 branch = source.get('branch', 'master')
                 if repo_url not in repo_url_to_workspace:
                     ws = wss.new_workspace()
@@ -274,8 +274,8 @@ class GitSourceReference:
     def __str__(self):
         repo_url_tuple = split(self.repo_url)
         last_component = repo_url_tuple[1] if repo_url_tuple[1] else basename(repo_url_tuple[0])
-        return '{}{}{}'.format(last_component, '({})'.format(self.branch) if self.branch != 'master' else '',
-                               self.path if self.path != '/' else '')
+        return 'git/{}{}'.format(join(last_component, self.path), ' [{}]'.format(self.branch) if self
+                                 .branch != 'master' else '')
 
     def __repr__(self):
         return '\'{}\''.format(self)
