@@ -160,7 +160,7 @@ def transition(old, new):
 def log_plans(plans):
     for plan in plans:
         buildable = plan.buildable
-        log(LogLevel.info, ' - {}', buildable.source_reference)
+        log(LogLevel.info, ' - {}{}', buildable.source_reference, ' [chroot]' if plan.chroot else '')
         for pkgname in plan.requisites:
             log(LogLevel.info, '       \033[2mWith {}\033[0m', pkgname)
         for pkgname in plan.build:
