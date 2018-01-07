@@ -72,14 +72,16 @@ def generate_plans(pkgnames, backends, repository):
     return plans
 
 
-def execute_plans_build(plans):
-    """ :param plans: Plans to execute. """
+def execute_plans_update(plans, repository):
+    """ :param plans: Plans to execute.
+    :param repository: The main repository.
+    """
     if sum(1 for plan in plans if plan.chroot and len(plan.build) > 0) > 0:
         # Chroot required.
         with arch_root() as chroot:
-            do_build(plans, chroot)
+            do_build(plans, repository, chroot)
     else:
-        do_build(plans)
+        do_build(plans, repository)
 
 
 def do_build(plans, repository, chroot=None):
@@ -100,7 +102,7 @@ def do_build(plans, repository, chroot=None):
                 chroot.build(pkgbuild_dir)
             else:
                 build(pkgbuild_dir)
-            built_package_file = join(pkgbuild_dir, buildable.pacakge_info.pick_package_file_at(pkgbuild_dir))
+            built_package_file = join(pkgbuild_dir, buildable.package_info.pick_package_file_at(pkgbuild_dir))
             repository.add(built_package_file)
 
 

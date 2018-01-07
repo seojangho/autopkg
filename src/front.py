@@ -3,7 +3,6 @@
 from utils import run_lock
 from utils import log
 from utils import LogLevel
-from sys import argv
 from os import environ
 from backends import git_backend
 from backends import gshellext_backend
@@ -14,6 +13,9 @@ from utils import sign_key
 from utils import config
 from contextlib import contextmanager
 from utils import mkdir
+from builder import generate_plans
+from builder import execute_plans_update
+from builder import execute_plans_autoremove
 
 
 BACKENDS = [git_backend, gshellext_backend, aur_backend]
@@ -68,6 +70,11 @@ def do_packages(arguments, repository):
             log(LogLevel.info, ' - {}', package_tiny_info)
 
 
+def do_plans(repository):
+    with config_targets() as config_data:
+        return generate_plans(config_data.json, BACKENDS, repository)
+
+
 def help(name):
     print('''Usage:\t{0} targets add [target-package-name-to-add]*
 \t{0} targets remove [target-package-name-to-remove]*
@@ -96,9 +103,13 @@ def front(name, arguments):
                 do_packages(arguments[index + 1:], repository)
                 break
             elif cmdlet == 'update':
-                pass
+                if plans is None:
+                    plans = do_plans(repository)
+                execute_plans_update(plans, repository)
             elif cmdlet == 'autoremove':
-                pass
+                if plans is None:
+                    plans = do_plans(repository)
+                execute_plans_autoremove(plans, repository)
             else:
                 help(name)
                 if cmdlet != '--help':
