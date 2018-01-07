@@ -39,7 +39,7 @@ class PackageTinyInfo:
 
     def __str__(self):
         """ :return: Representation of this package reference. """
-        return '{}({})'.format(self.name, self.version)
+        return '{} ({})'.format(self.name, self.version)
 
     def __repr__(self):
         """ :return: Formal representation of this package reference. """
