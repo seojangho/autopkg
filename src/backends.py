@@ -2,11 +2,14 @@
 
 from utils import run
 from utils import url_read
+from utils import config
+from utils import workspace
 from gzip import decompress
 from json import loads
 from package import PackageInfo
 from os.path import join
 from urllib.error import HTTPError
+from contextlib import AbstractContextManager
 
 
 class SourceReference:
@@ -176,7 +179,7 @@ def gshellext_backend(pkgnames):
         recent_version_pair = max(json['shell_version_map'].values(), key=lambda pair: pair['version'])
         recent_version = recent_version_pair['version']
         recent_version_tag = recent_version_pair['pk']
-        escaped_description = json['description'].replace('\'', '\\\'')
+        escaped_description = json['description'].replace('\'', '\'\"\'\"\'')
         package_info = PackageInfo(GSHELLEXT_PREFIX + uuid.lower(), str(recent_version) + GSHELLEXT_PKGREL)
         buildable = GShellExtBuildable(package_info, uuid, recent_version, recent_version_tag, escaped_description,
                                        json['link'])
@@ -189,4 +192,59 @@ GIT_CONFIG_NAME = 'git'
 
 
 def git_backend(pkgnames):
+    try:
+        git_backend.pkgname_to_buildable
+    except AttributeError:
+        git_backend.pkgname_to_buildable = do_git()
     return list()
+
+
+def do_git():
+    with config(GIT_CONFIG_NAME) as config_data:
+        with Workspaces() as wss:
+            repo_url_to_workspace = dict()
+            pkgname_to_buildable = dict()
+            for source in config_data:
+                repo_url = source['repository']
+                if repo_url not in repo_url_to_workspace:
+                    ws = wss.new_workspace()
+                    run(['git', 'clone', '--depth', '1', repo_url, ws], capture=False)
+                    repo_url_to_workspace[repo_url] = ws
+                ws = repo_url_to_workspace[repo_url]
+                path = join(ws, source.get('path', '/'))
+                branch = source.get('branch', 'master')
+                run(['git', 'checkout', branch], cwd=ws, quiet=True)
+    return pkgname_to_buildable
+
+
+def value_from_pkgbuild(cwd, name):
+    stdout = run(['bash', '-c', '\'set +u && . PKGBUILD && echo \"${}\"\''.format(name)], cwd=cwd, quiet=True).strip()
+    if len(stdout):
+        return stdout
+    else:
+        return None
+
+
+def array_from_pkgbuild(cwd, name):
+    stdout = run(['bash', '-c', '\'set +u && . PKGBUILD && printf "%s\\n" echo "${{{}[@]}}"\''.format(name)],
+                 cwd=cwd, quiet=True)
+    return [value for value in stdout.splitlines() if len(value)]
+
+
+class Workspaces(AbstractContextManager):
+    def __init__(self):
+        self.workspaces = list()
+
+    def new_workspace(self):
+        ws = workspace()
+        path = ws.__enter__()
+        self.workspaces.append(ws)
+        return path
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        ret = None
+        for ws in self.workspaces:
+            sub_ret = ws.__exit__(exc_type, exc_value, traceback)
+            if sub_ret:
+                ret = sub_ret
+        return ret
