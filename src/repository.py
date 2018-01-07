@@ -31,6 +31,13 @@ class Repository:
                     in tarfile_open(self.db_path).getmembers() if member.isdir()]
         self.packages = {package.name: package for package in packages}
 
+    def __str__(self):
+        return 'Repository {} at {} (key={}, sudo={})'.format(self.name, self.directory, self.sign_key, self.sudo)
+
+    def __repr__(self):
+        return 'Repository({}, {}, sign_key={}, sudo={})'.format(repr(self.name), repr(self.directory),
+                                                                 repr(self.sign_key), repr(self.sudo))
+
     def add(self, package_file_path):
         """ Adds a package to the repository.
         :param package_file_path: The path to the package file.
@@ -47,4 +54,11 @@ class Repository:
             sudo=self.sudo, capture=False)
         self.packages[package.name] = package
 
-    # TODO remove...
+    def remove(self, pkgname):
+        """ :param pkgname: The name of the package to remove. """
+        if pkgname not in self.packages:
+            raise Exception('Package {} not in {}'.format(pkgname, self))
+        file_name = self.packages[pkgname].pick_package_file_at(self.directory)
+        run(['rm', '-f', join(self.directory, file_name)], sudo=self.sudo)
+        run(['rm', '-f', join(self.directory, file_name + '.sig')], sudo=self.sudo)
+        run(['repo-remove'] + self.sign_parameters + [self.db_path, pkgname], sudo=self.sudo, capture=False)

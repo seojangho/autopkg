@@ -2,6 +2,11 @@
 
 from utils import run
 from os.path import basename
+from re import escape
+from os import listdir
+from os.path import join
+from os.path import isfile
+from re import match
 
 
 class PackageTinyInfo:
@@ -39,6 +44,17 @@ class PackageTinyInfo:
     def __repr__(self):
         """ :return: Formal representation of this package reference. """
         return '\'' + self.__str__() + '\''
+
+    def pick_package_file_at(self, directory):
+        """ :param directory: The directory.
+        :return: The name of the package file in the directory.
+        """
+        pattern = '^{}-{}-.*.pkg.tar.xz$'.format(escape(self.name), escape(str(self.version)))
+        matched = [file_name for file_name in listdir(directory) if isfile(join(directory, file_name))
+                   and match(pattern, file_name)]
+        if len(matched) != 1:
+            raise Exception('The number of picked package file for {} at {}: {}'.format(self, directory, len(matched)))
+        return matched[0]
 
 
 class PackageInfo:
