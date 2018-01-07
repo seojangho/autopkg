@@ -4,10 +4,15 @@ from utils import run
 from utils import url_read
 from utils import config
 from utils import workspace
+from utils import log
+from utils import LogLevel
 from gzip import decompress
 from json import loads
 from package import PackageInfo
+from package import Version
 from os.path import join
+from os.path import split
+from os.path import basename
 from urllib.error import HTTPError
 from contextlib import AbstractContextManager
 
@@ -30,7 +35,7 @@ class SourceReference:
         return '\'{}\''.format(self)
 
     def __hash__(self):
-        return hash(self.source)
+        return hash((self.backend, self.source))
 
     def __eq__(self, other):
         if not isinstance(other, SourceReference):
@@ -196,7 +201,7 @@ def git_backend(pkgnames):
         git_backend.pkgname_to_buildable
     except AttributeError:
         git_backend.pkgname_to_buildable = do_git()
-    return list()
+    return [git_backend.pkgname_to_buildable[pkgname] for pkgname in pkgnames]
 
 
 def do_git():
@@ -206,19 +211,79 @@ def do_git():
             pkgname_to_buildable = dict()
             for source in config_data:
                 repo_url = source['repository']
+                repo_path = source.get('path', '/')
+                branch = source.get('branch', 'master')
                 if repo_url not in repo_url_to_workspace:
                     ws = wss.new_workspace()
-                    run(['git', 'clone', '--depth', '1', repo_url, ws], capture=False)
+                    run(['git', 'clone', '--depth', '1', '--branch', branch, repo_url, ws], capture=False)
                     repo_url_to_workspace[repo_url] = ws
                 ws = repo_url_to_workspace[repo_url]
-                path = join(ws, source.get('path', '/'))
-                branch = source.get('branch', 'master')
+                path = join(ws, repo_path)
                 run(['git', 'checkout', branch], cwd=ws, quiet=True)
+                version = Version.from_components(value_from_pkgbuild(path, 'pkgver'),
+                                                  value_from_pkgbuild(path, 'pkgrel'),
+                                                  epoch=value_from_pkgbuild(path, 'epoch'))
+                pkgname = value_from_pkgbuild(path, 'pkgname')
+                package_info = PackageInfo(pkgname, version,
+                                           pkgbase=value_from_pkgbuild(path, 'pkgbase'),
+                                           depends=array_from_pkgbuild(path, 'depends'),
+                                           makedepends=array_from_pkgbuild(path, 'makedepends'),
+                                           checkdepends=array_from_pkgbuild(path, 'checkdepends'))
+                source_reference = GitSourceReference(repo_url, repo_path, branch)
+                buildable = GitBuildable(package_info, source_reference, repo_url, repo_path, branch)
+                if pkgname in pkgname_to_buildable:
+                    log(LogLevel.warn, 'Multiple git sources for pkgname {}', pkgname)
+                else:
+                    pkgname_to_buildable[pkgname] = buildable
     return pkgname_to_buildable
 
 
+class GitBuildable(AbstractBuildable):
+    def __init__(self, package_info, source_reference, repo_url, path, branch):
+        super().__init__(package_info, source_reference)
+        self.repo_url = repo_url
+        self.path = path
+        self.branch = branch
+
+    def write_pkgbuild_to(self, path):
+        """ :param path: Path to workspace.
+        :return: Path to the leaf directory where PKGBUILD resides.
+        """
+        run(['git', 'clone', '--depth', '1', '--branch', self.branch, self.repo_url, path], capture=False)
+        return join(path, self.path)
+
+    @property
+    def chroot_required(self):
+        """ :return: True. """
+        return True
+
+
+class GitSourceReference:
+    def __init__(self, repo_url, path, branch):
+        self.repo_url = repo_url
+        self.path = path
+        self.branch = branch
+
+    def __str__(self):
+        repo_url_tuple = split(self.repo_url)
+        last_component = repo_url_tuple[1] if repo_url_tuple[1] else basename(repo_url_tuple[0])
+        return '{}{}{}'.format(last_component, '({})'.format(self.branch) if self.branch != 'master' else '',
+                               self.path if self.path != '/' else '')
+
+    def __repr__(self):
+        return '\'{}\''.format(self)
+
+    def __hash__(self):
+        return hash((self.repo_url, self.path, self.branch))
+
+    def __eq__(self, other):
+        if not isinstance(other, GitSourceReference):
+            return False
+        return self.repo_url == other.repo_url and self.path == other.path and self.branch == other.branch
+
+
 def value_from_pkgbuild(cwd, name):
-    stdout = run(['bash', '-c', '\'set +u && . PKGBUILD && echo \"${}\"\''.format(name)], cwd=cwd, quiet=True).strip()
+    stdout = run(['bash', '-c', 'set +u && . PKGBUILD && echo "${}"'.format(name)], cwd=cwd, quiet=True).strip()
     if len(stdout):
         return stdout
     else:
@@ -226,7 +291,7 @@ def value_from_pkgbuild(cwd, name):
 
 
 def array_from_pkgbuild(cwd, name):
-    stdout = run(['bash', '-c', '\'set +u && . PKGBUILD && printf "%s\\n" echo "${{{}[@]}}"\''.format(name)],
+    stdout = run(['bash', '-c', 'set +u && . PKGBUILD && printf "%s\\n" "${{{}[@]}}"'.format(name)],
                  cwd=cwd, quiet=True)
     return [value for value in stdout.splitlines() if len(value)]
 

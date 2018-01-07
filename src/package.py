@@ -98,6 +98,11 @@ class Version:
         """ :param version: A string that represents the version. """
         self.version = version
 
+    @classmethod
+    def from_components(cls, pkgver, pkgrel, epoch=None):
+        epoch_string = '{}:'.format(epoch) if epoch is not None and int(epoch) != 0 else ''
+        return cls('{}{}-{}'.format(epoch_string, pkgver, pkgrel))
+
     def __str__(self):
         """ :return: Representation of the version. """
         return self.version
