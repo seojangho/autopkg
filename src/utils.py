@@ -55,6 +55,8 @@ def run(command, sudo=False, cwd=None, capture=True, quiet=False, stdin=None, al
     except CalledProcessError as e:
         if allow_error:
             return None
+        log(LogLevel.error, 'Error while running: {}', ' '.join(cmd))
+        log(LogLevel.error, 'Return code: {}', e.returncode)
         if capture:
             log(LogLevel.error, e.stderr)
         raise e
