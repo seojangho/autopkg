@@ -93,8 +93,10 @@ class CaseInsensitiveStringList:
     """ A list of strings that ignores case, except for 'get'. """
 
     def __init__(self, lst):
-        self.list_original = list(set(lst))
-        self.list_lower = [string.lower() for string in self.list_original]
+        self.list_original = lst
+        self.list_lower = [string.lower() for string in lst]
+        if len(self.list_lower) != len(set(self.list_lower)):
+            raise Exception('Cannot build case insensitive list with unique elements.')
 
     def __contains__(self, item):
         return item.lower() in self.list_lower
@@ -110,7 +112,7 @@ class CaseInsensitiveStringList:
 
     def remove(self, string):
         try:
-            index = list.index(string.lower())
+            index = self.list_lower.index(string.lower())
             del self.list_original[index]
             del self.list_lower[index]
         except ValueError:
@@ -127,7 +129,7 @@ def query_by_pkgnames(pkgnames, backends):
     :param backends: List of backends, sorted by priority.
     :return: List of the found buildables.
     """
-    names = CaseInsensitiveStringList(pkgnames)
+    names = CaseInsensitiveStringList(list(pkgnames))
     buildables = list()
     for backend in backends:
         new_buildables = backend(names.get())
