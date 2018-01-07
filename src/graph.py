@@ -56,7 +56,7 @@ class DependencyEdge:
     """ Represents dependency relationship. """
 
     def __init__(self, pkgname, dependency_type):
-        """ :param pkgname: The name of package to depend on
+        """ :param pkgname: The name of package to depend on. CASE SENSITIVE.
         :param dependency_type: The type of dependency.
         """
         self.pkgname = pkgname
@@ -96,14 +96,6 @@ class CaseInsensitiveStringList:
         self.list_original = list(set(lst))
         self.list_lower = [string.lower() for string in self.list_original]
 
-    def remove(self, string):
-        try:
-            index = list.index(string.lower())
-            del self.list_original[index]
-            del self.list_lower[index]
-        except ValueError:
-            pass
-
     def __contains__(self, item):
         return item.lower() in self.list_lower
 
@@ -113,6 +105,21 @@ class CaseInsensitiveStringList:
     def get(self):
         return self.list_original
 
+    def get_lower(self):
+        return self.list_lower
+
+    def remove(self, string):
+        try:
+            index = list.index(string.lower())
+            del self.list_original[index]
+            del self.list_lower[index]
+        except ValueError:
+            pass
+
+    def remove_strings(self, strings):
+        for string in strings:
+            self.remove(string)
+
 
 def query_by_pkgnames(pkgnames, backends):
     """ Obtain BuildItems from package names.
@@ -120,13 +127,12 @@ def query_by_pkgnames(pkgnames, backends):
     :param backends: List of backends, sorted by priority.
     :return: List of the found buildables.
     """
-    names = list(pkgnames)
+    names = CaseInsensitiveStringList(pkgnames)
     buildables = list()
     for backend in backends:
-        new_buildables = backend(names)
+        new_buildables = backend(names.get())
         buildables += new_buildables
-        resolved = [buildable.package_info.pkgname for buildable in new_buildables]
-        names = [name for name in names if name not in resolved]
+        names.remove_strings([buildable.package_info.pkgname for buildable in new_buildables])
     return buildables
 
 
@@ -140,9 +146,10 @@ def build_dependency_graph(pkgnames, backends):
     pkgname_to_vertex = dict()
     unresolved_edges = list(root_edges)
     while len(unresolved_edges) > 0:
-        unresolved_pkgnames = [unresolved_edge.pkgname for unresolved_edge in unresolved_edges]
+        unresolved_pkgnames = CaseInsensitiveStringList(
+            [unresolved_edge.pkgname for unresolved_edge in unresolved_edges])
         new_vertices = list()
-        for buildable in query_by_pkgnames(unresolved_pkgnames, backends):
+        for buildable in query_by_pkgnames(unresolved_pkgnames.get(), backends):
             if buildable.package_info.pkgname not in unresolved_pkgnames:
                 # Since this BuildItem does not contribute to resolving packages, discard it.
                 # Maybe buildable.package_info.pkgname has been resolved by other Buildable ahead.
@@ -151,16 +158,16 @@ def build_dependency_graph(pkgnames, backends):
             new_vertex = DependencyVertex.from_buildable(buildable)
             new_vertices.append(new_vertex)
             pkgname_to_vertex[buildable.package_info.pkgname] = new_vertex
-        for unresolved_pkgname in unresolved_pkgnames:
+        for unresolved_pkgname in unresolved_pkgnames.get_lower():
             # We have tried to find BuildItem for unresolved_pkgname, but it was unable to obtain.
             # Maybe it's from official repositories.
             pkgname_to_vertex[unresolved_pkgname] = None
         for unresolved_edge in unresolved_edges:
-            unresolved_edge.resolve(pkgname_to_vertex[unresolved_edge.pkgname])
+            unresolved_edge.resolve(pkgname_to_vertex[unresolved_edge.pkgname.lower()])
         for unresolved_edge in [edge for vertex in new_vertices for edge in vertex.edges]:
             # Resolve dependencies for newly added vertices, if possible.
-            if unresolved_edge.pkgname in pkgname_to_vertex:
-                unresolved_edge.resolve(pkgname_to_vertex[unresolved_edge.pkgname])
+            if unresolved_edge.pkgname.lower() in pkgname_to_vertex:
+                unresolved_edge.resolve(pkgname_to_vertex[unresolved_edge.pkgname.lower()])
         # Unresolved dependencies for newly added vertices will be handled in the next round.
         unresolved_edges = [edge for vertex in new_vertices for edge in vertex.edges if not edge.is_resolved]
     return root_edges
