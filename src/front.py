@@ -77,6 +77,7 @@ def do_packages(arguments, repository):
 
 def do_plans(repository):
     with config_targets() as config_data:
+        log(LogLevel.header, 'Querying Backends...')
         graph = build_dependency_graph(config_data.json, BACKENDS)
         log(LogLevel.header, 'Dependency Graph:')
         for root_edge in graph:
@@ -150,7 +151,7 @@ def log_plans(plans):
         buildable = plan.buildable
         log(LogLevel.info, ' - {}', buildable.pkgbase_reference)
         for pkgname in plan.build:
-            log(LogLevel.info, '      Build {}', pkgname)
+            log(LogLevel.info, '      \033[1mBuild {}\033[0m', pkgname)
         for pkgname in plan.requisites:
             log(LogLevel.info, '       \033[2mWith {}\033[0m', pkgname)
         for pkgname in plan.keep:
