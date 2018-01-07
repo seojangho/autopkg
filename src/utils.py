@@ -18,12 +18,14 @@ from fcntl import LOCK_EX
 from fcntl import LOCK_UN
 from re import sub
 from time import strftime
+from sys import stderr
 
 
 home = str(Path.home())
 autopkg_home = environ.get('AUTOPKG_HOME', join(home, '.autopkg'))
 workspaces_home = join(autopkg_home, 'workspaces')
 config_home = join(autopkg_home, 'config')
+repository_home = join(autopkg_home, 'repository')
 sign_key = environ.get('AUTOPKG_KEY', None)
 num_retrials = int(environ.get('AUTOPKG_RETRY', 3))
 
@@ -171,4 +173,4 @@ def log(log_level, content, *args):
     codes = LOG_LEVEL_TO_COLOR[log_level]
     if codes is None:
         return
-    print(color(text, codes))
+    print(color(text, codes), file=stderr)

@@ -84,6 +84,12 @@ class PackageInfo:
         """ :return: Formal representation of this package reference. """
         return repr(self.tiny_info)
 
+    def pick_package_file_at(self, directory):
+        """ :param directory: The directory.
+        :return: The name of the package file in the directory.
+        """
+        return self.tiny_info.pick_package_file_at(directory)
+
 
 class Version:
     """ Represents package version, including pkgver, pkgrel, and epoch. """

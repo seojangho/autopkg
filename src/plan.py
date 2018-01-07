@@ -55,7 +55,7 @@ class Plan:
             self.add_build(pkgname)
 
 
-def convert_graph_to_plan(graph, repository):
+def convert_graph_to_plans(graph, repository):
     """ :param graph: List of DependencyEdges from the root vertex of the package dependency graph.
     :param repository: The current repository.
     :return: List of BuildPlans to execute in order.

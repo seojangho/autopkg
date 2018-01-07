@@ -54,11 +54,17 @@ class Repository:
             sudo=self.sudo, capture=False)
         self.packages[package.name] = package
 
-    def remove(self, pkgname):
-        """ :param pkgname: The name of the package to remove. """
+    def find_package_file_path(self, pkgname):
+        """ :param pkgname: The name of the package to find. """
         if pkgname not in self.packages:
             raise Exception('Package {} not in {}'.format(pkgname, self))
         file_name = self.packages[pkgname].pick_package_file_at(self.directory)
-        run(['rm', '-f', join(self.directory, file_name)], sudo=self.sudo)
-        run(['rm', '-f', join(self.directory, file_name + '.sig')], sudo=self.sudo)
+        return join(self.directory, file_name)
+
+    def remove(self, pkgname):
+        """ :param pkgname: The name of the package to remove. """
+        file_path = self.find_package_file_path(pkgname)
+        run(['rm', '-f', file_path], sudo=self.sudo)
+        run(['rm', '-f', file_path + '.sig'], sudo=self.sudo)
         run(['repo-remove'] + self.sign_parameters + [self.db_path, pkgname], sudo=self.sudo, capture=False)
+        del self.packages[pkgname]
