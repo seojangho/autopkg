@@ -38,8 +38,9 @@ def config_targets():
 
 def do_targets(arguments):
     if len(arguments) == 0:
-        return
-    cmdlet = arguments[0]
+        cmdlet = 'list'
+    else:
+        cmdlet = arguments[0]
     targets = arguments[1:]
     with config_targets() as config_data:
         if cmdlet == 'add':
@@ -58,8 +59,9 @@ def do_targets(arguments):
 
 def do_packages(arguments, repository):
     if len(arguments) == 0:
-        return
-    cmdlet = arguments[0]
+        cmdlet = 'list'
+    else:
+        cmdlet = arguments[0]
     targets = arguments[1:]
     if cmdlet == 'add':
         for target in targets:
