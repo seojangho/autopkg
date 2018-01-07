@@ -94,6 +94,9 @@ def aur_backend(pkgnames):
     return buildables
 
 
+GSHELLEXT_PREFIX = 'gnome-shell-extension-'
+
+
 def gshellext_backend(pkgnames):
     return list()
 

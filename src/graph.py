@@ -89,6 +89,31 @@ class DependencyEdge:
         return self.dependency_type != DependencyType.run
 
 
+class CaseInsensitiveStringList:
+    """ A list of strings that ignores case, except for 'get'. """
+
+    def __init__(self, lst):
+        self.list_original = list(set(lst))
+        self.list_lower = [string.lower() for string in self.list_original]
+
+    def remove(self, string):
+        try:
+            index = list.index(string.lower())
+            del self.list_original[index]
+            del self.list_lower[index]
+        except ValueError:
+            pass
+
+    def __contains__(self, item):
+        return item.lower() in self.list_lower
+
+    def __len__(self):
+        return len(self.list_original)
+
+    def get(self):
+        return self.list_original
+
+
 def query_by_pkgnames(pkgnames, backends):
     """ Obtain BuildItems from package names.
     :param pkgnames: List of package names.
