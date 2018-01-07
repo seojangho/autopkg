@@ -68,6 +68,8 @@ def do_packages(arguments, repository):
         log(LogLevel.header, 'List of Packages in the Repository:')
         for package_tiny_info in repository.packages.values():
             log(LogLevel.info, ' - {}', package_tiny_info)
+    else:
+        unknown_command(cmdlet)
 
 
 def do_plans(repository):

@@ -46,7 +46,7 @@ class ArchRoot:
     """ An Arch chroot. """
 
     def __init__(self, path):
-        """ :param ws: Pato for the chroot. """
+        """ :param ws: Path for the chroot. """
         self.path = path
         repository_path = join(path, 'root', 'repo')
         self.repository = Repository('autopkg', mkdir(repository_path, sudo=True), sudo=True)
@@ -61,7 +61,7 @@ class ArchRoot:
                 return
             except CalledProcessError:
                 pass
-        message = 'Failed to build {} at {} trial(s)'.format(pkgbuild_dir, num_retrials)
+        message = 'Failed to build {} after {} trial(s)'.format(pkgbuild_dir, num_retrials)
         log(LogLevel.error, message)
         raise Exception(message)
 
