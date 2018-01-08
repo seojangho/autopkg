@@ -49,7 +49,7 @@ class PackageTinyInfo:
         """ :param directory: The directory.
         :return: The name of the package file in the directory.
         """
-        pattern = '^{}-{}-.*.pkg.tar.xz$'.format(escape(self.name), escape(str(self.version)))
+        pattern = '^{}-([0-9]+:)?[a-z0-9_.@+]+-[a-z0-9_.@+]+-[a-z0-9_.@+]+\.pkg\.tar\.xz$'.format(escape(self.name))
         matched = [file_name for file_name in listdir(directory) if isfile(join(directory, file_name))
                    and match(pattern, file_name)]
         if len(matched) != 1:
