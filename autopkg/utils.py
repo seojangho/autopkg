@@ -26,6 +26,8 @@ autopkg_home = environ.get('AUTOPKG_HOME', join(home, '.autopkg'))
 repository_name = environ.get('AUTOPKG_REPO_NAME', 'autopkg')
 workspaces_home = join(autopkg_home, 'workspaces')
 config_home = join(autopkg_home, 'config', repository_name)
+run_lock_home = join(autopkg_home, 'run_lock')
+log_home = join(autopkg_home, 'log')
 repository_home = join(autopkg_home, 'repository')
 sign_key = environ.get('AUTOPKG_KEY', None)
 num_retrials = int(environ.get('AUTOPKG_RETRY', 3))
@@ -105,7 +107,7 @@ def advisory_lock(file):
 @contextmanager
 def run_lock():
     """ :return: Context manager for run lock. """
-    with open(join(mkdir(autopkg_home), 'run.lock'), mode='a') as file:
+    with open(join(mkdir(run_lock_home), repository_name), mode='a') as file:
         with advisory_lock(file):
             yield
 
@@ -191,7 +193,7 @@ def log(log_level, content, *args):
     try:
         log.file
     except AttributeError:
-        log.file = open(join(mkdir(autopkg_home), 'log'), mode='a+t')
+        log.file = open(join(mkdir(log_home), repository_name), mode='a+t')
     text = str(content).format(*args)
     log.file.write('{}:{}\t{}\n'.format(strftime('%Y-%m-%dT%H:%M:%S%z'), log_level.name, remove_color(text)))
     log.file.flush()
