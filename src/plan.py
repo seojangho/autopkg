@@ -84,7 +84,7 @@ def do_visit_vertex(vertex, repository, required_by, source_to_plan):
     pkgname = vertex.buildable.package_info.pkgname
     if pkgname in required_by:
         raise CyclicDependencyError(vertex.buildable.package_info.pkgname)
-    plan = list()
+    plans = list()
     existing_plans = list()
     for edge in vertex.edges:
         if not edge.is_resolved:
@@ -99,7 +99,7 @@ def do_visit_vertex(vertex, repository, required_by, source_to_plan):
             existing_plans.append(existing_plan)
             continue
         try:
-            plan.extend(do_visit_vertex(sub_vertex, repository, required_by + [pkgname], source_to_plan))
+            plans.extend(do_visit_vertex(sub_vertex, repository, required_by + [pkgname], source_to_plan))
         except CyclicDependencyError as e:
             e.chain(pkgname)
             raise e
@@ -108,10 +108,10 @@ def do_visit_vertex(vertex, repository, required_by, source_to_plan):
     # while resolving cyclic dependency due to runtime dependencies.
     # So we double-check the existence.
     if source not in source_to_plan:
-        source_to_plan[source] = Plan.from_buildable(vertex.buildable, plan + existing_plans)
-        plan.append(source_to_plan[source])
+        source_to_plan[source] = Plan.from_buildable(vertex.buildable, plans + existing_plans)
+        plans.append(source_to_plan[source])
     source_to_plan[source].add(pkgname, repository)
-    return plan
+    return plans
 
 
 class CyclicDependencyError(Exception):
