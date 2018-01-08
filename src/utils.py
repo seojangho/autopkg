@@ -28,6 +28,7 @@ config_home = join(autopkg_home, 'config')
 repository_home = join(autopkg_home, 'repository')
 sign_key = environ.get('AUTOPKG_KEY', None)
 num_retrials = int(environ.get('AUTOPKG_RETRY', 3))
+repository_name = environ.get('AUTOPKG_REPO_NAME', 'autopkg')
 
 
 def run(command, sudo=False, cwd=None, capture=True, quiet=False, stdin=None, allow_error=False):

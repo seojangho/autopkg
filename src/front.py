@@ -4,11 +4,13 @@ from utils import run_lock
 from utils import log
 from utils import LogLevel
 from os import environ
+from os.path import join
 from backends import git_backend
 from backends import gshellext_backend
 from backends import aur_backend
 from repository import Repository
 from utils import repository_home
+from utils import repository_name
 from utils import sign_key
 from utils import config
 from contextlib import contextmanager
@@ -182,6 +184,7 @@ def do_help(name):
 \t{0} update autoremove
 Environment variables:
  - AUTOPKG_HOME
+ - AUTOPKG_REPO_NAME
  - AUTOPKG_KEY: GPG key to sign packages and the repository.
  - AUTOPKG_RETRY: The number of retrials in build packages in chroot environment.'''.format(name))
 
@@ -190,9 +193,11 @@ def front(name, arguments):
     with run_lock():
         log(LogLevel.debug, 'arguments: {}', arguments)
         log(LogLevel.debug, 'AUTOPKG_HOME: {}', environ.get('AUTOPKG_HOME', None))
+        log(LogLevel.debug, 'AUTOPKG_REPO_HOME: {}', environ.get('AUTOPKG_REPO_HOME', None))
         log(LogLevel.debug, 'AUTOPKG_KEY: {}', environ.get('AUTOPKG_KEY', None))
         log(LogLevel.debug, 'AUTOPKG_RETRY: {}', environ.get('AUTOPKG_RETRY', None))
-        repository = Repository('autopkg', mkdir(repository_home), sign_key=sign_key, sudo=False)
+        repository = Repository(repository_name, mkdir(join(repository_home, repository_name)), sign_key=sign_key,
+                                sudo=False)
         plans = None
         for index, cmdlet in enumerate(arguments):
             if cmdlet == 'targets':
