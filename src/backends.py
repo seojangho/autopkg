@@ -75,10 +75,10 @@ class AURBuildable(AbstractBuildable):
 
 
 def extract_package_names(depends):
-    """ :param depends: List of depends in AUR rpc result.
+    """ :param depends: List of depends in AUR rpc results or PKGBUILD.
     :return: List of names of packages.
     """
-    return [depend.split('>')[0].split('<')[0].split('=')[0] for depend in depends]
+    return list(set([depend.split('>')[0].split('<')[0].split('=')[0] for depend in depends]))
 
 
 def aur_backend(pkgnames):
@@ -221,9 +221,10 @@ def do_git():
                 pkgname = value_from_pkgbuild(path, 'pkgname')
                 package_info = PackageInfo(pkgname, version,
                                            pkgbase=value_from_pkgbuild(path, 'pkgbase'),
-                                           depends=array_from_pkgbuild(path, 'depends'),
-                                           makedepends=array_from_pkgbuild(path, 'makedepends'),
-                                           checkdepends=array_from_pkgbuild(path, 'checkdepends'))
+                                           depends=extract_package_names(array_from_pkgbuild(path, 'depends')),
+                                           makedepends=extract_package_names(array_from_pkgbuild(path, 'makedepends')),
+                                           checkdepends=extract_package_names(array_from_pkgbuild(path,
+                                                                                                  'checkdepends')))
                 source_reference = GitSourceReference(repo_url, repo_path, branch)
                 buildable = GitBuildable(package_info, source_reference, repo_url, repo_path, branch)
                 if pkgname in pkgname_to_buildable:
