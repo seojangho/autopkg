@@ -24,7 +24,7 @@ class Plan:
         """
         package_info = buildable.package_info
         dependencies = list(set(package_info.depends + package_info.makedepends + package_info.checkdepends))
-        resolved_dependencies = [plan.buildable.package_info.pkgname for plan in plans]
+        resolved_dependencies = [pkgname for plan in plans for pkgname in plan.build + plan.keep]
         return cls(buildable, [pkgname for pkgname in dependencies if pkgname in resolved_dependencies])
 
     def __str__(self):
@@ -110,7 +110,7 @@ def do_visit_vertex(vertex, repository, required_by, source_to_plan):
     if source not in source_to_plan:
         source_to_plan[source] = Plan.from_buildable(vertex.buildable, plans + existing_plans)
         plans.append(source_to_plan[source])
-    source_to_plan[source].add(pkgname, repository)
+    source_to_plan[source].add(edge.pkgname, repository)
     return plans
 
 
