@@ -28,7 +28,7 @@ class Plan:
         return cls(buildable, [pkgname for pkgname in dependencies if pkgname in resolved_dependencies])
 
     def __str__(self):
-        return '{}→[{}]'.format(self.buildable.source_reference, ', '.join(self.build))
+        return '{}→[{}]'.format(self.buildable.source_reference, ', '.join(self.build + self.keep))
 
     def __repr__(self):
         return '\'{}\''.format(self)
