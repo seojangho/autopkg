@@ -53,7 +53,7 @@ class Plan:
         :param pkgname: The name of the package.
         :param repository: The Repository.
         """
-        if pkgname in repository.packages and repository.packages[pkgname] < self.buildable.package_info.version:
+        if pkgname in repository.packages and repository.packages[pkgname] >= self.buildable.package_info.version:
             self.add_keep(pkgname)
         else:
             self.add_build(pkgname)
