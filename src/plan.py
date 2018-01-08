@@ -110,7 +110,7 @@ def do_visit_vertex(vertex, repository, required_by, source_to_plan):
     if source not in source_to_plan:
         source_to_plan[source] = Plan.from_buildable(vertex.buildable, plans + existing_plans)
         plans.append(source_to_plan[source])
-    source_to_plan[source].add(edge.pkgname, repository)
+    source_to_plan[source].add(pkgname, repository)
     return plans
 
 
