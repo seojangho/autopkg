@@ -206,8 +206,8 @@ def do_git():
             pkgname_to_buildable = dict()
             for source in config_data.json:
                 repo_url = source['repository']
-                repo_path = source.get('path', '')
-                branch = source.get('branch', 'master')
+                repo_path = source['path']
+                branch = source['branch']
                 if repo_url not in repo_url_to_workspace:
                     ws = wss.new_workspace()
                     run(['git', 'clone', '--depth', '1', '--branch', branch, repo_url, ws], capture=False)

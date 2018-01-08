@@ -8,6 +8,7 @@ from os.path import join
 from backends import git_backend
 from backends import gshellext_backend
 from backends import aur_backend
+from backends import config_git_backend
 from repository import Repository
 from utils import repository_home
 from utils import repository_name
@@ -77,6 +78,35 @@ def do_packages(arguments, repository):
             log(LogLevel.info, ' - {}', package_tiny_info)
     else:
         unknown_command(cmdlet)
+
+
+def do_git(arguments):
+    if len(arguments) == 0:
+        cmdlet = 'list'
+    else:
+        cmdlet = arguments[0]
+    targets = arguments[1:]
+    with config_git_backend() as config_data:
+        if cmdlet == 'add':
+            repo_url = targets[0]
+            path = targets[1] if len(targets) > 1 else ''
+            branch = targets[2] if len(targets) > 2 else 'master'
+            config_data.json.append({'repository': repo_url, 'path': path, 'branch': branch})
+        elif cmdlet == 'remove':
+            for index in sorted([int(index) for index in targets], reverse=True):
+                try:
+                    del config_data.json[index]
+                except IndexError:
+                    log(LogLevel.warn, 'Out of index: {}', index)
+        elif cmdlet == 'list':
+            log(LogLevel.header, 'List of Git Sources:')
+            for index, source in enumerate(config_data.json):
+                log(LogLevel.info, ' - {}', index)
+                log(LogLevel.info, '     Repository {}', source['repository'])
+                log(LogLevel.info, '           Path {}', source['path'])
+                log(LogLevel.info, '         Branch {}', source['branch'])
+        else:
+            unknown_command(cmdlet)
 
 
 def do_plans(repository):
@@ -179,6 +209,9 @@ def do_help(name):
 \t{0} packages add [path-to-the-package-file-to-add]*
 \t{0} packages remove [package-name-to-remove]*
 \t{0} packages list
+\t{0} git add [repository-url] [path-in-repository]? [branch]?
+\t{0} git remove [index]*
+\t{0} git list
 \t{0} update
 \t{0} autoremove
 \t{0} update autoremove
@@ -205,6 +238,9 @@ def front(name, arguments):
                 break
             elif cmdlet == 'packages':
                 do_packages(arguments[index + 1:], repository)
+                break
+            elif cmdlet == 'git':
+                do_git(arguments[index + 1:])
                 break
             elif cmdlet == 'update':
                 if plans is None:
