@@ -45,10 +45,9 @@ class SourceReference:
 
 
 class AbstractBuildable:
-    def __init__(self, package_info, source_reference, no_extract=False):
+    def __init__(self, package_info, source_reference):
         self.package_info = package_info
         self.source_reference = source_reference
-        self.no_extract = no_extract
 
     def __str__(self):
         return '{}→{}'.format(self.source_reference, self.package_info)
@@ -139,7 +138,7 @@ package() {{
 
 class GShellExtBuildable(AbstractBuildable):
     def __init__(self, package_info, uuid, version, version_tag, description, link):
-        super().__init__(package_info, SourceReference('gshellext', uuid), no_extract=True)
+        super().__init__(package_info, SourceReference('gshellext', uuid))
         self.uuid = uuid
         self.version = version
         self.version_tag = version_tag
@@ -238,8 +237,7 @@ def do_git():
                                            makedepends=array_from_pkgbuild(path, 'makedepends'),
                                            checkdepends=array_from_pkgbuild(path, 'checkdepends'))
                 source_reference = GitSourceReference(repo_url, repo_path, branch)
-                no_extract = len(array_from_pkgbuild(path, 'source')) == 0
-                buildable = GitBuildable(package_info, source_reference, repo_url, repo_path, branch, no_extract)
+                buildable = GitBuildable(package_info, source_reference, repo_url, repo_path, branch)
                 if pkgname in pkgname_to_buildable:
                     log(LogLevel.warn, 'Multiple git sources for pkgname {}', pkgname)
                 else:
@@ -248,8 +246,8 @@ def do_git():
 
 
 class GitBuildable(AbstractBuildable):
-    def __init__(self, package_info, source_reference, repo_url, path, branch, no_extract):
-        super().__init__(package_info, source_reference, no_extract=no_extract)
+    def __init__(self, package_info, source_reference, repo_url, path, branch):
+        super().__init__(package_info, source_reference)
         self.repo_url = repo_url
         self.path = path
         self.branch = branch

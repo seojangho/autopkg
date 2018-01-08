@@ -50,15 +50,13 @@ class ArchRoot:
         repository_path = join(path, 'root', 'repo')
         self.repository = Repository('autopkg', mkdir(repository_path, sudo=True), sudo=True)
 
-    def build(self, pkgbuild_dir, no_extract):
+    def build(self, pkgbuild_dir):
         """ Build packages in chroot environment.
         :param pkgbuild_dir: The path to the directory where PKGBUILD resides.
         """
-        option = ['--noextract'] if no_extract else []
         for i in range(num_retrials):
             try:
-                run(['makechrootpkg', '-c', '-u', '-l', 'working', '-r', self.path, '--', '--syncdeps', '--noconfirm',
-                     '--log', '--holdver', '--skipinteg'] + option, cwd=pkgbuild_dir, capture=False)
+                run(['makechrootpkg', '-c', '-u', '-l', 'working', '-r', self.path], cwd=pkgbuild_dir, capture=False)
                 return
             except CalledProcessError:
                 pass
@@ -67,13 +65,11 @@ class ArchRoot:
         raise Exception(message)
 
 
-def build(pkgbuild_dir, no_extract):
+def build(pkgbuild_dir):
     """ Build packages in non-chroot environment.
     :param pkgbuild_dir: The path to the directory where PKGBUILD resides.
-    :param no_extract: Whether to use --noextract or not.
     """
-    option = ['--noextract'] if no_extract else []
-    run(['makepkg'] + option, cwd=pkgbuild_dir, capture=False)
+    run(['makepkg'], cwd=pkgbuild_dir, capture=False)
 
 
 def execute_plans_update(plans, repository):
@@ -105,9 +101,9 @@ def do_build(plans, repository, chroot=None):
         with workspace() as pkgbuild_workspace:
             pkgbuild_dir = buildable.write_pkgbuild_to(pkgbuild_workspace)
             if plan.chroot:
-                chroot.build(pkgbuild_dir, buildable.no_extract)
+                chroot.build(pkgbuild_dir)
             else:
-                build(pkgbuild_dir, buildable.no_extract)
+                build(pkgbuild_dir)
             for pkgname in plan.build:
                 package_tiny_info = PackageTinyInfo(pkgname, buildable.package_info.version)
                 built_package_file = join(pkgbuild_dir, package_tiny_info.pick_package_file_at(pkgbuild_dir))
