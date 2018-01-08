@@ -1,27 +1,27 @@
 #!/usr/bin/python3
 
-from utils import run_lock
-from utils import log
-from utils import LogLevel
 from os import environ
 from os.path import join
-from backends import git_backend
-from backends import gshellext_backend
-from backends import aur_backend
-from backends import config_git_backend
-from repository import Repository
-from utils import repository_home
-from utils import repository_name
-from utils import sign_key
-from utils import config
 from contextlib import contextmanager
-from utils import mkdir
-from graph import build_dependency_graph
-from plan import convert_graph_to_plans
-from builder import execute_plans_update
-from builder import execute_plans_autoremove
-from builder import autoremovable_packages
 from enum import Enum
+from .utils import run_lock
+from .utils import log
+from .utils import LogLevel
+from .utils import repository_home
+from .utils import repository_name
+from .utils import sign_key
+from .utils import config
+from .utils import mkdir
+from .backends import git_backend
+from .backends import gshellext_backend
+from .backends import aur_backend
+from .backends import config_git_backend
+from .repository import Repository
+from .graph import build_dependency_graph
+from .plan import convert_graph_to_plans
+from .builder import execute_plans_update
+from .builder import execute_plans_autoremove
+from .builder import autoremovable_packages
 
 
 BACKENDS = [git_backend, gshellext_backend, aur_backend]

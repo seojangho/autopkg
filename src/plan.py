@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-from utils import log
-from utils import LogLevel
+from .utils import log
+from .utils import LogLevel
 
 
 class Plan:

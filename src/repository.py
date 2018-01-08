@@ -3,9 +3,9 @@
 from os.path import join
 from os.path import exists
 from os.path import basename
-from utils import run
 from tarfile import open as tarfile_open
-from package import PackageTinyInfo
+from .utils import run
+from .package import PackageTinyInfo
 
 
 class Repository:

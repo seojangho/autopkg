@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
-from utils import run
-from os.path import basename
-from re import escape
 from os import listdir
+from os.path import basename
 from os.path import join
 from os.path import isfile
+from re import escape
 from re import match
+from .utils import run
 
 
 class PackageTinyInfo:

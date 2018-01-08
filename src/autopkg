@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from front import front
+from autopkg import front
 from sys import argv
 
 

@@ -1,21 +1,21 @@
 #!/usr/bin/python3
 
-from utils import run
-from utils import url_read
-from utils import config
-from utils import workspace
-from utils import log
-from utils import LogLevel
 from gzip import decompress
 from json import loads
-from package import PackageInfo
-from package import Version
 from os.path import join
 from os.path import split
 from os.path import basename
 from urllib.error import HTTPError
 from contextlib import AbstractContextManager
 from contextlib import contextmanager
+from .utils import run
+from .utils import url_read
+from .utils import config
+from .utils import workspace
+from .utils import log
+from .utils import LogLevel
+from .package import PackageInfo
+from .package import Version
 
 
 class SourceReference:

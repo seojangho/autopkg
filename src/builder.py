@@ -1,17 +1,17 @@
 #!/usr/bin/python3
 
 from contextlib import contextmanager
-from utils import workspace
-from utils import run
-from utils import mkdir
-from utils import num_retrials
-from utils import log
-from utils import LogLevel
 from os.path import join
 from os.path import isdir
-from repository import Repository
 from subprocess import CalledProcessError
-from package import PackageTinyInfo
+from .utils import workspace
+from .utils import run
+from .utils import mkdir
+from .utils import num_retrials
+from .utils import log
+from .utils import LogLevel
+from .repository import Repository
+from .package import PackageTinyInfo
 
 
 @contextmanager

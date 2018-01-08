@@ -3,9 +3,9 @@
 from contextlib import contextmanager
 from urllib.request import urlopen
 from tempfile import TemporaryDirectory
-from pathlib import Path
-from os.path import join
 from os import environ
+from os.path import join
+from pathlib import Path
 from subprocess import run as subprocess_run
 from subprocess import PIPE
 from subprocess import CalledProcessError
