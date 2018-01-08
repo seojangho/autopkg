@@ -12,5 +12,4 @@ setup(
     url='https://git.jangho.io/system/autopkg.git/',
     license='LICENSE.txt',
     description='Personal package manager for Arch.',
-    install_requires=[],
 )
