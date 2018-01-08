@@ -93,7 +93,9 @@ def do_visit_vertex(vertex, repository, required_by, source_to_plan):
         sub_vertex = edge.vertex_to
         if sub_vertex.buildable.source_reference in source_to_plan:
             # Merge into existing Plan.
-            source_to_plan[sub_vertex.buildable.source_reference].add(edge.pkgname, repository)
+            existing_plan = source_to_plan[sub_vertex.buildable.source_reference]
+            existing_plan.add(edge.pkgname, repository)
+            plan.append(existing_plan)
             continue
         try:
             plan.extend(do_visit_vertex(sub_vertex, repository, required_by + [pkgname], source_to_plan))
