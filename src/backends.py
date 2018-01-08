@@ -91,11 +91,8 @@ def aur_backend(pkgnames):
         fetched = url_read('https://aur.archlinux.org/packages.gz')
         aur_backend.aur_packages = [name for name in decompress(fetched).decode().splitlines()
                                     if len(name) > 0 and name[0] != '#']
-        aur_backend.pkgname_to_buildable = dict()
-    buildables = [aur_backend.pkgname_to_buildable[pkgname] for pkgname in pkgnames
-                  if pkgname in aur_backend.pkgname_to_buildable]
-    query_targets = ['&arg[]=' + pkgname for pkgname in pkgnames if pkgname not in aur_backend.pkgname_to_buildable
-                     and pkgname in aur_backend.aur_packages]
+    buildables = list()
+    query_targets = ['&arg[]=' + pkgname for pkgname in pkgnames if pkgname in aur_backend.aur_packages]
     if len(query_targets) > 0:
         json = loads(url_read('https://aur.archlinux.org/rpc/?v=5&type=info' + ''.join(query_targets)).decode())
         for result in json['results']:
@@ -103,7 +100,6 @@ def aur_backend(pkgnames):
                                      depends=extract_package_names(result.get('Depends', list())),
                                      makedepends=extract_package_names(result.get('MakeDepends', list())),
                                      checkdepends=extract_package_names(result.get('CheckDepends', list()))))
-            aur_backend.pkgname_to_buildable[buildable.package_info.pkgname] = buildable
             buildables.append(buildable)
     return buildables
 
@@ -166,18 +162,11 @@ def gshellext_backend(pkgnames):
     """ :param pkgnames: The names of the packages to lookup.
     :return: List of related AURBuildables.
     """
-    try:
-        gshellext_backend.uuid_to_buildable
-    except AttributeError:
-        gshellext_backend.uuid_to_buildable = dict()
     buildables = list()
     for pkgname in pkgnames:
         if not pkgname.startswith(GSHELLEXT_PREFIX):
             continue
         uuid = pkgname[len(GSHELLEXT_PREFIX):]
-        if uuid in gshellext_backend.uuid_to_buildable:
-            buildables.append(gshellext_backend.uuid_to_buildable[uuid])
-            continue
         try:
             json = loads(url_read('https://extensions.gnome.org/extension-info/?uuid={}', uuid).decode())
         except HTTPError:
@@ -189,7 +178,6 @@ def gshellext_backend(pkgnames):
         package_info = PackageInfo(GSHELLEXT_PREFIX + uuid.lower(), str(recent_version) + GSHELLEXT_PKGREL)
         buildable = GShellExtBuildable(package_info, uuid, recent_version, recent_version_tag, escaped_description,
                                        json['link'])
-        gshellext_backend.uuid_to_buildable[uuid] = buildable
         buildables.append(buildable)
     return buildables
 
