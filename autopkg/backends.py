@@ -210,7 +210,7 @@ def do_git():
                 branch = source['branch']
                 if repo_url not in repo_url_to_workspace:
                     ws = wss.new_workspace()
-                    run(['git', 'clone', '--depth', '1', '--branch', branch, repo_url, ws], capture=False)
+                    run(['git', 'clone', repo_url, ws], capture=False)
                     repo_url_to_workspace[repo_url] = ws
                 ws = repo_url_to_workspace[repo_url]
                 path = join(ws, repo_path)
