@@ -24,7 +24,7 @@ from sys import stderr
 home = str(Path.home())
 autopkg_home = environ.get('AUTOPKG_HOME', join(home, '.autopkg'))
 repository_name = environ.get('AUTOPKG_REPO_NAME', 'autopkg')
-workspaces_home = join(autopkg_home, 'workspaces')
+workspaces_home = join(autopkg_home, 'workspace')
 config_home = join(autopkg_home, 'config', repository_name)
 run_lock_home = join(autopkg_home, 'run_lock')
 log_home = join(autopkg_home, 'log')

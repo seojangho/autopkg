@@ -55,6 +55,14 @@ class AbstractBuildable:
     def __repr__(self):
         return '\'{}->{}\''.format(self.source_reference, self.package_info)
 
+    def write_pkgbuild_to(self, path):
+        raise Exception('Not implemented.')
+
+    @property
+    def chroot_required(self):
+        """ :return: True. """
+        return True
+
 
 class AURBuildable(AbstractBuildable):
     def __init__(self, package_info):

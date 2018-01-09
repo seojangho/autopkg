@@ -6,6 +6,7 @@ from os.path import basename
 from tarfile import open as tarfile_open
 from .utils import run
 from .package import PackageTinyInfo
+from .package import pick_package_file
 
 
 class Repository:
@@ -58,7 +59,7 @@ class Repository:
         """ :param pkgname: The name of the package to find. """
         if pkgname not in self.packages:
             raise Exception('Package {} not in {}'.format(pkgname, self))
-        file_name = self.packages[pkgname].pick_package_file_at(self.directory)
+        file_name = pick_package_file(pkgname, self.directory)
         return join(self.directory, file_name)
 
     def remove(self, pkgname):

@@ -24,6 +24,7 @@ from .builder import execute_plans_autoremove
 from .builder import autoremovable_packages
 
 
+VERSION = '0.2.0'
 BACKENDS = [git_backend, gshellext_backend, aur_backend]
 
 
@@ -212,6 +213,7 @@ def do_help(name):
 \t{0} git add [repository-url] [path-in-repository]? [branch]?
 \t{0} git remove [index]*
 \t{0} git list
+\t{0} plan
 \t{0} update
 \t{0} autoremove
 \t{0} update autoremove
@@ -224,6 +226,7 @@ Environment variables:
 
 def front(name, arguments):
     with run_lock():
+        log(LogLevel.debug, 'version: {}', VERSION)
         log(LogLevel.debug, 'arguments: {}', arguments)
         log(LogLevel.debug, 'AUTOPKG_HOME: {}', environ.get('AUTOPKG_HOME', None))
         log(LogLevel.debug, 'AUTOPKG_REPO_HOME: {}', environ.get('AUTOPKG_REPO_HOME', None))
@@ -250,6 +253,9 @@ def front(name, arguments):
                 if plans is None:
                     plans = do_plans(repository)
                 execute_plans_autoremove(plans, repository)
+            elif cmdlet == 'plan':
+                if plans is None:
+                    plans = do_plans(repository)
             else:
                 do_help(name)
                 if cmdlet != '--help':

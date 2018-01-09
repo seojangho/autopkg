@@ -45,16 +45,18 @@ class PackageTinyInfo:
         """ :return: Formal representation of this package reference. """
         return '\'' + self.__str__() + '\''
 
-    def pick_package_file_at(self, directory):
-        """ :param directory: The directory.
-        :return: The name of the package file in the directory.
-        """
-        pattern = '^{}-([0-9]+:)?[a-z0-9_.@+]+-[a-z0-9_.@+]+-[a-z0-9_.@+]+\.pkg\.tar\.xz$'.format(escape(self.name))
-        matched = [file_name for file_name in listdir(directory) if isfile(join(directory, file_name))
-                   and match(pattern, file_name)]
-        if len(matched) != 1:
-            raise Exception('The number of picked package file for {} at {}: {}'.format(self, directory, len(matched)))
-        return matched[0]
+
+def pick_package_file(pkgname, directory):
+    """ :param pkgname: The name of the package.
+    :param directory: The directory.
+    :return: The name of the package file in the directory.
+    """
+    pattern = '^{}-([0-9]+:)?[a-z0-9_.@+]+-[a-z0-9_.@+]+-[a-z0-9_.@+]+\.pkg\.tar\.xz$'.format(escape(pkgname))
+    matched = [file_name for file_name in listdir(directory) if isfile(join(directory, file_name))
+               and match(pattern, file_name)]
+    if len(matched) != 1:
+        raise Exception('The number of picked package file for {} at {}: {}'.format(pkgname, directory, len(matched)))
+    return matched[0]
 
 
 class PackageInfo:
@@ -83,12 +85,6 @@ class PackageInfo:
     def __repr__(self):
         """ :return: Formal representation of this package reference. """
         return repr(self.tiny_info)
-
-    def pick_package_file_at(self, directory):
-        """ :param directory: The directory.
-        :return: The name of the package file in the directory.
-        """
-        return self.tiny_info.pick_package_file_at(directory)
 
 
 class Version:

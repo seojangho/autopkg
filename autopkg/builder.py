@@ -11,7 +11,7 @@ from .utils import num_retrials
 from .utils import log
 from .utils import LogLevel
 from .repository import Repository
-from .package import PackageTinyInfo
+from .package import pick_package_file
 
 
 @contextmanager
@@ -114,8 +114,7 @@ def do_build(plans, repository, chroot=None):
                 else:
                     build(pkgbuild_dir)
                 for pkgname in plan.build:
-                    package_tiny_info = PackageTinyInfo(pkgname, buildable.package_info.version)
-                    built_package_file = join(pkgbuild_dir, package_tiny_info.pick_package_file_at(pkgbuild_dir))
+                    built_package_file = join(pkgbuild_dir, pick_package_file(pkgname, pkgbuild_dir))
                     repository.add(built_package_file)
                     log(LogLevel.good, 'Successfully built {} from {}', pkgname, buildable.source_reference)
         except BuildException:
