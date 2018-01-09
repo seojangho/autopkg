@@ -24,7 +24,6 @@ from .builder import execute_plans_autoremove
 from .builder import autoremovable_packages
 
 
-VERSION = '0.2.0'
 BACKENDS = [git_backend, gshellext_backend, aur_backend]
 
 
@@ -226,7 +225,6 @@ Environment variables:
 
 def front(name, arguments):
     with run_lock():
-        log(LogLevel.debug, 'version: {}', VERSION)
         log(LogLevel.debug, 'arguments: {}', arguments)
         log(LogLevel.debug, 'AUTOPKG_HOME: {}', environ.get('AUTOPKG_HOME', None))
         log(LogLevel.debug, 'AUTOPKG_REPO_HOME: {}', environ.get('AUTOPKG_REPO_HOME', None))

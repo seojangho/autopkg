@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 
 from distutils.core import setup
-from .autopkg.front import VERSION
 
 setup(
     name='autopkg',
-    version=VERSION,
+    version='0.2.0',
     author='JangHo Seo',
     author_email='jangho@jangho.io',
     packages=['autopkg'],
