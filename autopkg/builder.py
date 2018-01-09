@@ -41,6 +41,11 @@ def chroot_cleanup(path):
         run(['rm', '-rf', path], sudo=True)
 
 
+class BuildException(Exception):
+    """ Build exception. """
+    pass
+
+
 class ArchRoot:
     """ An Arch chroot. """
 
@@ -62,14 +67,17 @@ class ArchRoot:
                 pass
         message = 'Failed to build {} after {} trial(s)'.format(pkgbuild_dir, num_retrials)
         log(LogLevel.error, message)
-        raise Exception(message)
+        raise BuildException()
 
 
 def build(pkgbuild_dir):
     """ Build packages in non-chroot environment.
     :param pkgbuild_dir: The path to the directory where PKGBUILD resides.
     """
-    run(['makepkg'], cwd=pkgbuild_dir, capture=False)
+    try:
+        run(['makepkg'], cwd=pkgbuild_dir, capture=False)
+    except CalledProcessError:
+        raise BuildException()
 
 
 def execute_plans_update(plans, repository):
@@ -94,21 +102,24 @@ def do_build(plans, repository, chroot=None):
     for plan in plans:
         if len(plan.build) == 0:
             continue
-        if plan.chroot:
-            for requisite in plan.requisites:
-                chroot.repository.add(repository.find_package_file_path(requisite))
-        buildable = plan.buildable
-        with workspace() as pkgbuild_workspace:
-            pkgbuild_dir = buildable.write_pkgbuild_to(pkgbuild_workspace)
+        try:
             if plan.chroot:
-                chroot.build(pkgbuild_dir)
-            else:
-                build(pkgbuild_dir)
-            for pkgname in plan.build:
-                package_tiny_info = PackageTinyInfo(pkgname, buildable.package_info.version)
-                built_package_file = join(pkgbuild_dir, package_tiny_info.pick_package_file_at(pkgbuild_dir))
-                repository.add(built_package_file)
-                log(LogLevel.good, 'Successfully built {} from {}', pkgname, buildable.source_reference)
+                for requisite in plan.requisites:
+                    chroot.repository.add(repository.find_package_file_path(requisite))
+            buildable = plan.buildable
+            with workspace() as pkgbuild_workspace:
+                pkgbuild_dir = buildable.write_pkgbuild_to(pkgbuild_workspace)
+                if plan.chroot:
+                    chroot.build(pkgbuild_dir)
+                else:
+                    build(pkgbuild_dir)
+                for pkgname in plan.build:
+                    package_tiny_info = PackageTinyInfo(pkgname, buildable.package_info.version)
+                    built_package_file = join(pkgbuild_dir, package_tiny_info.pick_package_file_at(pkgbuild_dir))
+                    repository.add(built_package_file)
+                    log(LogLevel.good, 'Successfully built {} from {}', pkgname, buildable.source_reference)
+        except BuildException:
+            log(LogLevel.error, 'Error while building from {}', plan.buildable.source_reference)
 
 
 def autoremovable_packages(plans, repository):
