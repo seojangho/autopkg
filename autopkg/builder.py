@@ -20,8 +20,7 @@ def arch_root():
     with workspace() as path:
         chroot_root = join(path, 'root')
         chroot_working = join(path, 'working')
-        packages = ['base-devel', 'git', 'openssh', 'wget', 'curl']
-        run(['mkarchroot', chroot_root] + packages, capture=False)
+        run(['mkarchroot', chroot_root, 'base-devel'], capture=False)
         run(['tee', '-a', chroot_root + '/etc/pacman.conf'], sudo=True,
             stdin='\n[autopkg]\nSigLevel = Never\nServer = file:///repo\n')
         yield ArchRoot(path)
