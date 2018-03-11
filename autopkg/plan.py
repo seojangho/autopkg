@@ -24,8 +24,19 @@ class Plan:
         """
         package_info = buildable.package_info
         dependencies = list(set(package_info.depends + package_info.makedepends + package_info.checkdepends))
-        resolved_dependencies = [pkgname for plan in plans for pkgname in plan.build + plan.keep]
-        return cls(buildable, [pkgname for pkgname in dependencies if pkgname in resolved_dependencies])
+        pkgname_to_plan = dict()  # a map from name of a package to the plan that resolves the package
+        for plan in plans:
+            for pkgname in plan.build + plan.keep:
+                pkgname_to_plan[pkgname] = plan
+        return cls(buildable, list(set([resolved_dependency for pkgname in dependencies for resolved_dependency in cls.track_dependency(pkgname, pkgname_to_plan)])))
+
+    @classmethod
+    def track_dependency(cls, dependency, pkgname_to_plan):
+        if dependency in pkgname_to_plan:
+            plan = pkgname_to_plan[dependency]
+            return [dependency] + list(set([resolved_dependency for pkgname in plan.requisites for resolved_dependency in cls.track_dependency(pkgname, pkgname_to_plan)]))
+        else:
+            return []
 
     def __str__(self):
         return '{}→[{}]'.format(self.buildable.source_reference, ', '.join(self.build + self.keep))
