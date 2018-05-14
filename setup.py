@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name='autopkg',
-    version='0.2.3',
+    version='0.3.0',
     author='JangHo Seo',
     author_email='jangho@jangho.io',
     packages=['autopkg'],
