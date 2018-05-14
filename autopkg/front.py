@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import sys
 from os import environ
 from os.path import join
 from contextlib import contextmanager
@@ -22,6 +23,7 @@ from .graph import build_dependency_graph
 from .plan import convert_graph_to_plans
 from .builder import execute_plans_update
 from .builder import execute_plans_autoremove
+from .builder import execute_plans_has_autoremovable
 from .builder import autoremovable_packages
 
 
@@ -217,6 +219,7 @@ def do_help(name):
 \t{0} update
 \t{0} autoremove
 \t{0} update autoremove
+\t{0} has-no-autoremovable
 Environment variables:
  - AUTOPKG_HOME
  - AUTOPKG_REPO_NAME
@@ -255,6 +258,13 @@ def front(name, arguments):
             elif cmdlet == 'plan':
                 if plans is None:
                     plans = do_plans(repository)
+            elif cmdlet == 'has-no-autoremovable':
+                if plans is None:
+                    plans = do_plans(repository)
+                if execute_plans_has_autoremovable(plans, repository):
+                    sys.exit(1)
+                else:
+                    sys.exit(0)
             else:
                 do_help(name)
                 if cmdlet != '--help':
