@@ -81,8 +81,8 @@ def convert_graph_to_plans(graph, repository):
     root_edges = [edge for edge in graph if edge.vertex_to is not None]
     root_edges.sort(key=lambda edge: edge.vertex_to.num_build_time_dependencies)
     source_to_plan = dict()
-    lists_of_plans = [do_visit_vertex(edge.vertex_to, repository, [], source_to_plan) for edge in root_edges]
-    return [plan for plans in lists_of_plans for plan in plans]
+    sets_of_plans = [do_visit_vertex(edge.vertex_to, repository, [], source_to_plan) for edge in root_edges]
+    return [plan for plans in sets_of_plans for plan in plans]
 
 
 def do_visit_vertex(vertex, repository, required_by, source_to_plan):
@@ -90,13 +90,12 @@ def do_visit_vertex(vertex, repository, required_by, source_to_plan):
     :param repository: The Repository.
     :param required_by: List of names of packages that requires building this package for building and checking.
     :param source_to_plan: Dictionary with each entry from source reference to Plan. Treated as a mutable object.
-    :return: List of Plans to build packages specified by this subtree.
+    :return: Set of Plans to build packages specified by this subtree.
     """
     pkgname = vertex.buildable.package_info.pkgname
     if pkgname in required_by:
         raise CyclicDependencyError(vertex.buildable.package_info.pkgname)
-    plans = list()
-    existing_plans = list()
+    plans = set()
     for edge in vertex.edges:
         if not edge.is_resolved:
             raise Exception('Edge {} is not resolved'.format(edge))
@@ -107,10 +106,10 @@ def do_visit_vertex(vertex, repository, required_by, source_to_plan):
             # Merge into existing Plan.
             existing_plan = source_to_plan[sub_vertex.buildable.source_reference]
             existing_plan.add(edge.pkgname, repository)
-            existing_plans.append(existing_plan)
+            plans.add(existing_plan)
             continue
         try:
-            plans.extend(do_visit_vertex(sub_vertex, repository, required_by + [pkgname], source_to_plan))
+            plans |= do_visit_vertex(sub_vertex, repository, required_by + [pkgname], source_to_plan)
         except CyclicDependencyError as e:
             e.chain(pkgname)
             raise e
@@ -119,8 +118,8 @@ def do_visit_vertex(vertex, repository, required_by, source_to_plan):
     # while resolving cyclic dependency due to runtime dependencies.
     # So we double-check the existence.
     if source not in source_to_plan:
-        source_to_plan[source] = Plan.from_buildable(vertex.buildable, plans + existing_plans)
-        plans.append(source_to_plan[source])
+        source_to_plan[source] = Plan.from_buildable(vertex.buildable, plans)
+        plans.add(source_to_plan[source])
     source_to_plan[source].add(pkgname, repository)
     return plans
 
