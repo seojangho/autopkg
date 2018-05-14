@@ -201,3 +201,8 @@ def log(log_level, content, *args):
     if codes is None:
         return
     print(color(text, codes), file=stderr)
+
+
+def dedup(lst):
+    seen = set()
+    return [element for element in lst if not (element in seen or seen.add(element))]

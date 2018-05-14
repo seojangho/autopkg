@@ -12,6 +12,7 @@ from .utils import repository_name
 from .utils import sign_key
 from .utils import config
 from .utils import mkdir
+from .utils import dedup
 from .backends import git_backend
 from .backends import gshellext_backend
 from .backends import aur_backend
@@ -47,7 +48,7 @@ def do_targets(arguments):
     targets = arguments[1:]
     with config_targets() as config_data:
         if cmdlet == 'add':
-            config_data.json = list(set(config_data.json + targets))
+            config_data.json = dedup(config_data.json + targets)
         elif cmdlet == 'remove':
             for pkgname in [pkgname for pkgname in targets if pkgname not in config_data.json]:
                 log(LogLevel.warn, 'Not in targets list: {}', pkgname)

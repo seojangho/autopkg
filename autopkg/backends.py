@@ -14,6 +14,7 @@ from .utils import config
 from .utils import workspace
 from .utils import log
 from .utils import LogLevel
+from .utils import dedup
 from .package import PackageInfo
 from .package import Version
 
@@ -86,7 +87,7 @@ def extract_package_names(depends):
     """ :param depends: List of depends in AUR rpc results or PKGBUILD.
     :return: List of names of packages.
     """
-    return list(set([depend.split('>')[0].split('<')[0].split('=')[0] for depend in depends]))
+    return dedup([depend.split('>')[0].split('<')[0].split('=')[0] for depend in depends])
 
 
 def aur_backend(pkgnames):

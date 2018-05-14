@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from enum import Enum
+from .utils import dedup
 
 
 class DependencyType(Enum):
@@ -124,7 +125,7 @@ def query_by_pkgnames(pkgnames, backends):
     :param backends: List of backends, sorted by priority.
     :return: List of the found buildables.
     """
-    names = CaseInsensitiveStringList(list(set(pkgnames)))
+    names = CaseInsensitiveStringList(dedup(pkgnames))
     buildables = list()
     for backend in backends:
         new_buildables = backend(names.get())
@@ -144,7 +145,7 @@ def build_dependency_graph(pkgnames, backends):
     unresolved_edges = list(root_edges)
     while len(unresolved_edges) > 0:
         unresolved_pkgnames = CaseInsensitiveStringList(
-            list(set([unresolved_edge.pkgname for unresolved_edge in unresolved_edges])))
+            dedup([unresolved_edge.pkgname for unresolved_edge in unresolved_edges]))
         new_vertices = list()
         for buildable in query_by_pkgnames(unresolved_pkgnames.get(), backends):
             if buildable.package_info.pkgname not in unresolved_pkgnames:
