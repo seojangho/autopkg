@@ -227,19 +227,20 @@ def do_git():
                 version = Version.from_components(value_from_pkgbuild(path, 'pkgver'),
                                                   value_from_pkgbuild(path, 'pkgrel'),
                                                   epoch=value_from_pkgbuild(path, 'epoch'))
-                pkgname = value_from_pkgbuild(path, 'pkgname')
-                package_info = PackageInfo(pkgname, version,
-                                           pkgbase=value_from_pkgbuild(path, 'pkgbase'),
-                                           depends=extract_package_names(array_from_pkgbuild(path, 'depends')),
-                                           makedepends=extract_package_names(array_from_pkgbuild(path, 'makedepends')),
-                                           checkdepends=extract_package_names(array_from_pkgbuild(path,
-                                                                                                  'checkdepends')))
-                source_reference = GitSourceReference(repo_url, repo_path, branch)
-                buildable = GitBuildable(package_info, source_reference, repo_url, repo_path, branch)
-                if pkgname in pkgname_to_buildable:
-                    log(LogLevel.warn, 'Multiple git sources for pkgname {}', pkgname)
-                else:
-                    pkgname_to_buildable[pkgname] = buildable
+                pkgnames = array_from_pkgbuild(path, 'pkgname')
+                pkgbase = value_from_pkgbuild(path, 'pkgbase')
+                depends = extract_package_names(array_from_pkgbuild(path, 'depends'))
+                makedepends=extract_package_names(array_from_pkgbuild(path, 'makedepends'))
+                checkdepends=extract_package_names(array_from_pkgbuild(path, 'checkdepends'))
+                for pkgname in pkgnames:
+                    source_reference = GitSourceReference(repo_url, repo_path, branch)
+                    package_info = PackageInfo(pkgname, version, pkgbase=pkgbase, depends=depends,
+                                               makedepends=makedepends, checkdepends=checkdepends)
+                    buildable = GitBuildable(package_info, source_reference, repo_url, repo_path, branch)
+                    if pkgname in pkgname_to_buildable:
+                        log(LogLevel.warn, 'Multiple git sources for pkgname {}', pkgname)
+                    else:
+                        pkgname_to_buildable[pkgname] = buildable
     return pkgname_to_buildable
 
 
