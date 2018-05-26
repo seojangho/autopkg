@@ -83,7 +83,7 @@ def convert_graph_to_plans(graph, repository):
     root_edges.sort(key=lambda edge: edge.vertex_to.num_build_time_dependencies)
     source_to_plan = dict()
     lists_of_plans = [do_visit_vertex(edge.vertex_to, repository, [], source_to_plan) for edge in root_edges]
-    return [plan for plans in lists_of_plans for plan in plans]
+    return dedup([plan for plans in lists_of_plans for plan in plans])
 
 
 def do_visit_vertex(vertex, repository, required_by, source_to_plan):
