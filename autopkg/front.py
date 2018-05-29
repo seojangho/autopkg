@@ -14,6 +14,7 @@ from .utils import sign_key
 from .utils import config
 from .utils import mkdir
 from .utils import dedup
+from .utils import write_autoremovable
 from .backends import git_backend
 from .backends import gshellext_backend
 from .backends import aur_backend
@@ -23,7 +24,6 @@ from .graph import build_dependency_graph
 from .plan import convert_graph_to_plans
 from .builder import execute_plans_update
 from .builder import execute_plans_autoremove
-from .builder import execute_plans_has_autoremovable
 from .builder import autoremovable_packages
 
 
@@ -128,6 +128,7 @@ def do_plans(repository):
             log(LogLevel.header, 'Auto-removable Packages:')
             for pkgname in to_remove:
                 log(LogLevel.info, ' - {}', pkgname)
+        write_autoremovable(to_remove)
         return plans
 
 
@@ -219,7 +220,6 @@ def do_help(name):
 \t{0} update
 \t{0} autoremove
 \t{0} update autoremove
-\t{0} has-no-autoremovable
 Environment variables:
  - AUTOPKG_HOME
  - AUTOPKG_REPO_NAME
@@ -258,13 +258,6 @@ def front(name, arguments):
             elif cmdlet == 'plan':
                 if plans is None:
                     plans = do_plans(repository)
-            elif cmdlet == 'has-no-autoremovable':
-                if plans is None:
-                    plans = do_plans(repository)
-                if execute_plans_has_autoremovable(plans, repository):
-                    sys.exit(1)
-                else:
-                    sys.exit(0)
             else:
                 do_help(name)
                 if cmdlet != '--help':

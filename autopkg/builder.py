@@ -147,10 +147,3 @@ def execute_plans_autoremove(plans, repository):
         repository.remove(pkgname)
         log(LogLevel.good, 'Removed {}', pkgname)
     return to_remove
-
-def execute_plans_has_autoremovable(plans, repository):
-    to_remove = autoremovable_packages(plans, repository)
-    if len(to_remove) == 0:
-        return False
-    else:
-        return True
