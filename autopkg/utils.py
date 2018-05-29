@@ -30,7 +30,7 @@ config_home = join(autopkg_home, 'config', repository_name)
 run_lock_home = join(autopkg_home, 'run_lock')
 log_home = join(autopkg_home, 'log')
 repository_home = join(autopkg_home, 'repository')
-autoremovable_path = join(mkdir(join(autopkg_home, 'autoremovable')), repository_name)
+autoremovable_home = join(autopkg_home, 'autoremovable')
 sign_key = environ.get('AUTOPKG_KEY', None)
 num_retrials = int(environ.get('AUTOPKG_RETRY', 3))
 
@@ -187,11 +187,12 @@ def remove_color(text):
 
 
 def write_autoremovable(autoremovables):
+    path = join(mkdir(autoremovable_home), repository_name)
     try:
-        remove(autoremovable_path)
+        remove(path)
     except FileNotFoundError:
         pass
-    f = open(autoremovable_path, mode='wt')
+    f = open(path, mode='wt')
     for autoremovable in autoremovables:
         f.write('{}\n'.format(autoremovable))
     f.flush()
